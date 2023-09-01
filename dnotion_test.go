@@ -43,20 +43,21 @@ func TestDNotion(t *testing.T) {
 
 	// dao.InitContributors()
 
-	// 1. check counts
+	// // 1. check counts
 	// dao.CheckAllDbsCountAndID()
 
-	// 2. check actual usd equality with workload usd
-	// dao.CheckAllWorkloadAndAcutal()
+	// // 2. check actual usd equality with workload usd
+	// dao.CheckAllWorkloadAndAmount()
 
-	// 3. Update workload tx to finance table
+	// // 3. Update workload tx to finance table
 	// dao.UpdateAllWorkToFin()
+	// dao.UpdateWorkToFin("ef2043f45b0144ec846f69cd035c1224", "0c8f5483e1344d919e5e5a49d6d8dabb")
 
-	// 4. Update all Finance transactions to progress
-	// dao.UpdateAllFinToProgress("2023-07-21", "AR", 6.11)
-	// dao.UpdateFinToProgress("f5d84582e9d8471f8f903563cce72567", "2022-07-22", "AR", 5.9)
+	// // 4. Update all Finance transactions to progress
+	// dao.UpdateAllFinToProgress("2023-07-21", "AR", 6.11, "AR", 1)
+	// dao.UpdateFinToProgress("0c8f5483e1344d919e5e5a49d6d8dabb", "2023-09-01", "AR", 4.17, "AR", 1)
 
-	// 5. process payment by everpay
+	// // 5. process payment by everpay
 	// dao.PayAll()
-	// dao.Pay("caac7a1aefcc4ed0b02b8adbc106f021")
+	// dao.Pay("0c8f5483e1344d919e5e5a49d6d8dabb")
 }

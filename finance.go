@@ -55,7 +55,10 @@ func (n *DNotion) UpdateWorkToFin(workNid, finNid string) {
 					{ID: wpage.ID},
 				},
 			},
-			"Actual USD": notion.DatabasePageProperty{
+			// "Actual Token": notion.DatabasePageProperty{
+			// 	Select: &notion.SelectOptions{Name: "USDC"},
+			// },
+			"Amount": notion.DatabasePageProperty{
 				Number: &wusd,
 			},
 		}
