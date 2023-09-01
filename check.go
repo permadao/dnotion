@@ -24,19 +24,19 @@ func (n *DNotion) CheckDbsCountAndID(dbs []string) {
 	}
 }
 
-func (n *DNotion) CheckAllWorkloadAndAcutal() {
+func (n *DNotion) CheckAllWorkloadAndAmount() {
 	for i, fnid := range n.financeDBs {
 		t := time.Now()
 		fmt.Println("Checking fnid", fnid)
 
-		n.CheckWorkloadAndAcutal(fnid, n.workloadDBs[i])
+		n.CheckWorkloadAndAmount(fnid, n.workloadDBs[i])
 
 		fmt.Println("Check done fnid", fnid, time.Since(t))
 		fmt.Println()
 	}
 }
 
-func (n *DNotion) CheckWorkloadAndAcutal(fnid, wnid string) {
+func (n *DNotion) CheckWorkloadAndAmount(fnid, wnid string) {
 	fins := n.GetAllPagesFromDB(fnid, nil)
 	works := n.GetAllPagesFromDB(wnid, nil)
 
@@ -65,20 +65,20 @@ func (n *DNotion) CheckWorkloadAndAcutal(fnid, wnid string) {
 	for _, page := range fins {
 		p := page.Properties.(notion.DatabasePageProperties)
 
-		actualUSD := 0.0
-		if p["Actual USD"].Number != nil {
-			actualUSD = *p["Actual USD"].Number
+		actualAmount := 0.0
+		if p["Amount"].Number != nil {
+			actualAmount = *p["Amount"].Number
 		}
 
 		wid := p["Workload ID"].Relation[0].ID
 
 		if _, ok := workToUSD[wid]; !ok {
 			fmt.Printf("fnid/id: %v/%v check workload is failed, actual: %v, workload: %v\n",
-				fnid, p["ID"].Title[0].PlainText, actualUSD, nil)
+				fnid, p["ID"].Title[0].PlainText, actualAmount, nil)
 		}
-		if actualUSD != workToUSD[wid] {
+		if actualAmount != workToUSD[wid] {
 			fmt.Printf("fnid/id: %v/%v check workload is failed, actual: %v, workload: %v\n",
-				fnid, p["ID"].Title[0].PlainText, actualUSD, workToUSD[wid])
+				fnid, p["ID"].Title[0].PlainText, actualAmount, workToUSD[wid])
 		}
 	}
 }

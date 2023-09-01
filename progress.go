@@ -8,18 +8,26 @@ import (
 	"github.com/dstotijn/go-notion"
 )
 
-func (n *DNotion) UpdateAllFinToProgress(paymentDateStr, targetToken string, tokenPrice float64) {
+func (n *DNotion) UpdateAllFinToProgress(
+	paymentDateStr,
+	actualToken string, actualPrice float64,
+	targetToken string, targetPrice float64,
+) {
 	for _, v := range n.financeDBs {
 		t := time.Now()
 		fmt.Println("Update Finance to progress, fid", v)
 
-		n.UpdateFinToProgress(v, paymentDateStr, targetToken, tokenPrice)
+		n.UpdateFinToProgress(v, paymentDateStr, actualToken, actualPrice, targetToken, targetPrice)
 
 		fmt.Printf("Finance to progress, %s updated, since: %v\n\n", v, time.Since(t))
 	}
 }
 
-func (n *DNotion) UpdateFinToProgress(finNid, paymentDateStr, targetToken string, tokenPrice float64) {
+func (n *DNotion) UpdateFinToProgress(
+	finNid, paymentDateStr,
+	actualToken string, actualPrice float64,
+	targetToken string, targetPrice float64,
+) {
 	paymentDate, err := notion.ParseDateTime(paymentDateStr)
 	if err != nil {
 		fmt.Println("invalid payment date", paymentDateStr)
@@ -54,11 +62,17 @@ func (n *DNotion) UpdateFinToProgress(finNid, paymentDateStr, targetToken string
 	for _, page := range pages {
 		if _, err := n.Client.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
 			DatabasePageProperties: notion.DatabasePageProperties{
+				"Actual Token": notion.DatabasePageProperty{
+					Select: &notion.SelectOptions{Name: actualToken},
+				},
+				"Actual Price": notion.DatabasePageProperty{
+					Number: &actualPrice,
+				},
 				"Target Token": notion.DatabasePageProperty{
 					Select: &notion.SelectOptions{Name: targetToken},
 				},
-				"Token Price": notion.DatabasePageProperty{
-					Number: &tokenPrice,
+				"Target Price": notion.DatabasePageProperty{
+					Number: &targetPrice,
 				},
 				"Status": notion.DatabasePageProperty{
 					Status: &notion.SelectOptions{Name: "In progress"},

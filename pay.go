@@ -40,8 +40,8 @@ func (n *DNotion) Pay(fnid string) {
 		// get wallet and amount
 		p := page.Properties.(notion.DatabasePageProperties)
 		token := 0.0
-		if p["Token"].Formula != nil {
-			token = *p["Token"].Formula.Number
+		if p["Target Amount"].Formula != nil {
+			token = *p["Target Amount"].Formula.Number
 		}
 
 		wallet := ""
