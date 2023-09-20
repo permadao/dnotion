@@ -1,4 +1,4 @@
-package dnotion
+package fin
 
 import (
 	"context"
@@ -6,36 +6,40 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	log "github.com/sirupsen/logrus"
 )
 
-func (n *DNotion) UpdateAllFinToProgress(
+func (f *Finance) UpdateAllFinToProgress(
 	paymentDateStr,
 	actualToken string, actualPrice float64,
 	targetToken string, targetPrice float64,
-) {
-	for _, v := range n.financeDBs {
+) (errs []string) {
+	for _, v := range f.NotionDB.FinanceDBs {
 		t := time.Now()
-		fmt.Println("Update Finance to progress, fid", v)
+		log.Info("Update Finance to progress, fid", v)
 
-		n.UpdateFinToProgress(v, paymentDateStr, actualToken, actualPrice, targetToken, targetPrice)
-
-		fmt.Printf("Finance to progress, %s updated, since: %v\n\n", v, time.Since(t))
+		e := f.UpdateFinToProgress(v, paymentDateStr, actualToken, actualPrice, targetToken, targetPrice)
+		errs = append(errs, e...)
+		log.Infof("Finance to progress, %s updated, since: %v\n\n", v, time.Since(t))
 	}
+	return
 }
 
-func (n *DNotion) UpdateFinToProgress(
+func (f *Finance) UpdateFinToProgress(
 	finNid, paymentDateStr,
 	actualToken string, actualPrice float64,
 	targetToken string, targetPrice float64,
-) {
+) (errs []string) {
 	paymentDate, err := notion.ParseDateTime(paymentDateStr)
 	if err != nil {
-		fmt.Println("invalid payment date", paymentDateStr)
+		msg := fmt.Sprintf("invalid payment date %s", paymentDateStr)
+		log.Error(msg)
+		errs = append(errs, msg)
 		return
 	}
 
 	// get Status is Not started & Workload Status is Acctual txs
-	pages := n.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
+	pages := f.NotionDB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -60,7 +64,7 @@ func (n *DNotion) UpdateFinToProgress(
 		},
 	})
 	for _, page := range pages {
-		if _, err := n.Client.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
+		if _, err := f.NotionDB.Client.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
 			DatabasePageProperties: notion.DatabasePageProperties{
 				"Actual Token": notion.DatabasePageProperty{
 					Select: &notion.SelectOptions{Name: actualToken},
@@ -82,7 +86,10 @@ func (n *DNotion) UpdateFinToProgress(
 				},
 			},
 		}); err != nil {
-			fmt.Printf("Update nid/id: %v/%v failed. %v\n", finNid, page.ID, err)
+			msg := fmt.Sprintf("Update nid/id: %v/%v failed. %v", finNid, page.ID, err)
+			log.Error(msg)
+			errs = append(errs, msg)
 		}
 	}
+	return
 }

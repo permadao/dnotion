@@ -1,4 +1,4 @@
-package dnotion
+package fin
 
 import "testing"
 

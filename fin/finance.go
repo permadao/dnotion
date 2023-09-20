@@ -1,4 +1,4 @@
-package dnotion
+package fin
 
 import (
 	"context"
@@ -6,23 +6,24 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	log "github.com/sirupsen/logrus"
 )
 
-func (n *DNotion) UpdateAllWorkToFin() {
-	for i, v := range n.workloadDBs {
+func (f *Finance) UpdateAllWorkToFin() {
+	for i, v := range f.NotionDB.WorkloadDBs {
 		t := time.Now()
-		fmt.Println("Update workload to finance, wid", v)
+		log.Info("Update workload to finance, wid", v)
 
-		n.UpdateWorkToFin(v, n.financeDBs[i])
+		f.UpdateWorkToFin(v, f.NotionDB.FinanceDBs[i])
 
-		fmt.Printf("Workload to Finance, %s/%s updated, since:%v\n\n", v, n.financeDBs[i], time.Since(t))
+		log.Infof("Workload to Finance, %s/%s updated, since:%v\n\n", v, f.NotionDB.FinanceDBs[i], time.Since(t))
 	}
 }
 
-func (n *DNotion) UpdateWorkToFin(workNid, finNid string) {
+func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 	// get last Page id
-	wPageID := n.GetLastIDFromDB(workNid)
-	fPageID := n.GetLastIDFromDB(finNid)
+	wPageID := f.NotionDB.GetLastIDFromDB(workNid)
+	fPageID := f.NotionDB.GetLastIDFromDB(finNid)
 	// wPageID := 422
 	// fPageID := 420
 
@@ -30,7 +31,13 @@ func (n *DNotion) UpdateWorkToFin(workNid, finNid string) {
 		fPageID++
 
 		fPageIDStr := fmt.Sprintf("%d", fPageID)
-		wpage := n.GetPageFromDBByID(workNid, fPageIDStr)
+		wpage, err := f.NotionDB.GetPageFromDBByID(workNid, fPageIDStr)
+		if err != nil {
+			msg := fmt.Sprintf("error getting page from workload DB, wid:%s fpid:%s, err:%s", workNid, fPageIDStr, err)
+			log.Error(msg)
+			errlogs = append(errlogs, msg)
+			continue
+		}
 		wpagep := wpage.Properties.(notion.DatabasePageProperties)
 		wusd := 0.0
 		if wpagep["USD"].Number != nil {
@@ -64,7 +71,7 @@ func (n *DNotion) UpdateWorkToFin(workNid, finNid string) {
 		}
 		// add contributors to properties
 		if len(wpagep["Contributor"].People) > 0 {
-			if v, ok := n.uidToNid[wpagep["Contributor"].People[0].BaseUser.ID]; ok {
+			if v, ok := f.uidToNid[wpagep["Contributor"].People[0].BaseUser.ID]; ok {
 				dpp["Contributor"] = notion.DatabasePageProperty{
 					Relation: []notion.Relation{
 						{ID: v},
@@ -73,13 +80,16 @@ func (n *DNotion) UpdateWorkToFin(workNid, finNid string) {
 		}
 
 		// create finance expense
-		if _, err := n.Client.CreatePage(context.Background(), notion.CreatePageParams{
+		if _, err := f.NotionDB.Client.CreatePage(context.Background(), notion.CreatePageParams{
 			ParentType:             notion.ParentTypeDatabase,
 			ParentID:               finNid,
 			DatabasePageProperties: &dpp,
 		}); err != nil {
-			fmt.Println("Create page failed:", err)
+			msg := "create page failed:" + err.Error()
+			log.Error(msg)
+			errlogs = append(errlogs, msg)
 		}
 	}
+	return
 
 }

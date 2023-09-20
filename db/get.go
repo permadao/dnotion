@@ -1,4 +1,4 @@
-package dnotion
+package db
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"github.com/dstotijn/go-notion"
 )
 
-func (n *DNotion) GetPageFromDBByID(nid, id string) (page notion.Page) {
-	res, err := n.Client.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+func (db *NotionDB) GetPageFromDBByID(nid, id string) (*notion.Page, error) {
+	res, err := db.Client.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Filter: &notion.DatabaseQueryFilter{
 			Property: "ID",
 			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
@@ -21,36 +21,17 @@ func (n *DNotion) GetPageFromDBByID(nid, id string) (page notion.Page) {
 		PageSize: 1,
 	})
 	if err != nil {
-		fmt.Println("err", err)
-		return
+		return nil, fmt.Errorf("get page with id %s error: %s", id, err)
 	}
 	if len(res.Results) < 1 {
-		return
+		return nil, fmt.Errorf("no page found with id %s", id)
 	}
 
-	return res.Results[0]
+	return &res.Results[0], nil
 }
 
-func (n *DNotion) GetLastIDFromDB(nid string) (id int) {
-	page := n.GetLastPageFromDB(nid)
-
-	var err error
-	idd := page.Properties.(notion.DatabasePageProperties)["ID"]
-	switch idd.Type {
-	case notion.DBPropTypeTitle:
-		id, err = strconv.Atoi(idd.Title[0].PlainText)
-		if err != nil {
-			fmt.Println("err", err)
-		}
-	case notion.DBPropTypeNumber:
-		id = int(*idd.Number)
-	}
-
-	return
-}
-
-func (n *DNotion) GetLastPageFromDB(nid string) (page notion.Page) {
-	res, err := n.Client.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+func (db *NotionDB) GetLastPageFromDB(nid string) (page notion.Page) {
+	res, err := db.Client.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Sorts: []notion.DatabaseQuerySort{
 			notion.DatabaseQuerySort{
 				Property:  "Sort ID",
@@ -71,11 +52,25 @@ func (n *DNotion) GetLastPageFromDB(nid string) (page notion.Page) {
 	return res.Results[0]
 }
 
-func (n *DNotion) GetCountFromDB(nid string) int {
-	return len(n.GetAllPagesFromDB(nid, nil))
+func (db *NotionDB) GetLastIDFromDB(nid string) (id int) {
+	page := db.GetLastPageFromDB(nid)
+
+	var err error
+	idd := page.Properties.(notion.DatabasePageProperties)["ID"]
+	switch idd.Type {
+	case notion.DBPropTypeTitle:
+		id, err = strconv.Atoi(idd.Title[0].PlainText)
+		if err != nil {
+			fmt.Println("err", err)
+		}
+	case notion.DBPropTypeNumber:
+		id = int(*idd.Number)
+	}
+
+	return
 }
 
-func (n *DNotion) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page) {
+func (n *NotionDB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page) {
 	hasMore := true
 	nextCursor := ""
 
@@ -105,4 +100,8 @@ func (n *DNotion) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilt
 		}
 	}
 	return
+}
+
+func (n *NotionDB) GetCountFromDB(nid string) int {
+	return len(n.GetAllPagesFromDB(nid, nil))
 }

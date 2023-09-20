@@ -1,32 +1,27 @@
-package dnotion
+package fin
 
 import (
-	"fmt"
-
 	"github.com/dstotijn/go-notion"
 	"github.com/everFinance/go-everpay/account"
 	"github.com/everFinance/go-everpay/sdk"
 	"github.com/everFinance/goether"
+	"github.com/permadao/dnotion/db"
+	log "github.com/sirupsen/logrus"
 )
 
-type DNotion struct {
-	// notion client
-	Client *notion.Client
+type Finance struct {
+	// notion db
+	NotionDB *db.NotionDB
+
 	// everpay sdk
 	everpay *sdk.SDK
-
-	// db nid
-	taskDBs        []string // notion id
-	workloadDBs    []string // notion id
-	financeDBs     []string // notion id
-	contributorsDB string   // notion id
 
 	// contributors
 	uidToNid    map[string]string //  userid -> contributors page notion id
 	nidToWallet map[string]string //  contributors page notion id -> wallet
 }
 
-func New(secret, prv, everpayURL string, taskDBs, workloadDBs, financeDBs []string, contributorsDB string) *DNotion {
+func New(db *db.NotionDB, prv, everpayURL string) *Finance {
 	signer, err := goether.NewSigner(prv)
 	if err != nil {
 		panic(err)
@@ -35,24 +30,19 @@ func New(secret, prv, everpayURL string, taskDBs, workloadDBs, financeDBs []stri
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("wallet address:", sdk.AccId, "everpay network:", everpayURL)
+	log.Info("wallet address:", sdk.AccId, "everpay network:", everpayURL)
 
-	return &DNotion{
-		Client:  notion.NewClient(secret),
-		everpay: sdk,
-
-		taskDBs:        taskDBs,
-		workloadDBs:    workloadDBs,
-		financeDBs:     financeDBs,
-		contributorsDB: contributorsDB,
+	return &Finance{
+		NotionDB: db,
+		everpay:  sdk,
 
 		uidToNid:    make(map[string]string),
 		nidToWallet: make(map[string]string),
 	}
 }
 
-func (n *DNotion) InitContributors() {
-	pages := n.GetAllPagesFromDB(n.contributorsDB, nil)
+func (f *Finance) InitContributors() {
+	pages := f.NotionDB.GetAllPagesFromDB(f.NotionDB.ContributorsDB, nil)
 	for _, page := range pages {
 		p := page.Properties.(notion.DatabasePageProperties)
 		people := p["Notion"].People
@@ -60,7 +50,7 @@ func (n *DNotion) InitContributors() {
 			continue
 		}
 		uid := people[0].BaseUser.ID
-		n.uidToNid[uid] = page.ID
+		f.uidToNid[uid] = page.ID
 
 		if len(p["Wallet"].RichText) == 0 {
 			continue
@@ -70,6 +60,6 @@ func (n *DNotion) InitContributors() {
 			continue
 		}
 
-		n.nidToWallet[page.ID] = wallet
+		f.nidToWallet[page.ID] = wallet
 	}
 }
