@@ -28,13 +28,45 @@ func CheckAllDbsCountAndID(c *gin.Context) {
 	// sucess
 	c.JSON(http.StatusOK, gin.H{
 		"code":    http.StatusOK,
-		"message": "All db count and id OK",
+		"message": "OK",
 	})
 }
 
-func CheckAllWorkloadAndAcutal(c *gin.Context) {}
+func CheckAllWorkloadAndAmount(c *gin.Context) {
+	faileddbs := fin.Fin.CheckAllWorkloadAndAmount()
+	// return failed dbs
+	if len(faileddbs) > 0 {
+		msg := strings.Join(faileddbs, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
+}
 
-func UpdateAllWorkToFin(c *gin.Context) {}
+func UpdateAllWorkToFin(c *gin.Context) {
+	faileds := fin.Fin.UpdateAllWorkToFin()
+	// return failed
+	if len(faileds) > 0 {
+		msg := strings.Join(faileds, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
+}
 
 func UpdateAllFinToProgress(c *gin.Context) {}
 

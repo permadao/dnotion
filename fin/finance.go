@@ -10,15 +10,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (f *Finance) UpdateAllWorkToFin() {
+func (f *Finance) UpdateAllWorkToFin() (errlogs []string) {
 	for i, v := range db.DB.WorkloadDBs {
 		t := time.Now()
 		log.Info("Update workload to finance, wid", v)
 
-		f.UpdateWorkToFin(v, db.DB.FinanceDBs[i])
+		errs := f.UpdateWorkToFin(v, db.DB.FinanceDBs[i])
+		errlogs = append(errlogs, errs...)
 
 		log.Infof("Workload to Finance, %s/%s updated, since:%v\n\n", v, db.DB.FinanceDBs[i], time.Since(t))
 	}
+	return
 }
 
 func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
