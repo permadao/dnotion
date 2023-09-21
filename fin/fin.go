@@ -5,14 +5,14 @@ import (
 	"github.com/everFinance/go-everpay/account"
 	"github.com/everFinance/go-everpay/sdk"
 	"github.com/everFinance/goether"
+	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	log "github.com/sirupsen/logrus"
 )
 
-type Finance struct {
-	// notion db
-	NotionDB *db.NotionDB
+var Fin *Finance
 
+type Finance struct {
 	// everpay sdk
 	everpay *sdk.SDK
 
@@ -21,7 +21,14 @@ type Finance struct {
 	nidToWallet map[string]string //  contributors page notion id -> wallet
 }
 
-func New(db *db.NotionDB, prv, everpayURL string) *Finance {
+func Init() {
+	// create finance
+	Fin = create(config.Config.Everpay.PrivKey, config.Config.Everpay.Url)
+	// init contributors
+	Fin.initContributors()
+}
+
+func create(prv, everpayURL string) *Finance {
 	signer, err := goether.NewSigner(prv)
 	if err != nil {
 		panic(err)
@@ -33,16 +40,14 @@ func New(db *db.NotionDB, prv, everpayURL string) *Finance {
 	log.Info("wallet address:", sdk.AccId, "everpay network:", everpayURL)
 
 	return &Finance{
-		NotionDB: db,
-		everpay:  sdk,
-
+		everpay:     sdk,
 		uidToNid:    make(map[string]string),
 		nidToWallet: make(map[string]string),
 	}
 }
 
-func (f *Finance) InitContributors() {
-	pages := f.NotionDB.GetAllPagesFromDB(f.NotionDB.ContributorsDB, nil)
+func (f *Finance) initContributors() {
+	pages := db.DB.GetAllPagesFromDB(db.DB.ContributorsDB, nil)
 	for _, page := range pages {
 		p := page.Properties.(notion.DatabasePageProperties)
 		people := p["Notion"].People

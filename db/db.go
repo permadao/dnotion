@@ -2,11 +2,15 @@ package db
 
 import (
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/config"
 )
+
+var DB *NotionDB
 
 type NotionDB struct {
 	// notion client
-	Client *notion.Client
+	DBClient       *notion.Client
+	RedirectClient *notion.Client
 
 	// db nid
 	TaskDBs        []string // notion id
@@ -15,12 +19,13 @@ type NotionDB struct {
 	ContributorsDB string   // notion id
 }
 
-func New(secret string, taskDBs, workloadDBs, financeDBs []string, contributorsDB string) *NotionDB {
-	return &NotionDB{
-		Client:         notion.NewClient(secret),
-		TaskDBs:        taskDBs,
-		WorkloadDBs:    workloadDBs,
-		FinanceDBs:     financeDBs,
-		ContributorsDB: contributorsDB,
+func Init() {
+	DB = &NotionDB{
+		DBClient:       notion.NewClient(config.Config.NotionDB.DBSecret),
+		RedirectClient: notion.NewClient(config.Config.NotionDB.ClientSecret),
+		TaskDBs:        config.Config.NotionDB.TaskDBs,
+		WorkloadDBs:    config.Config.NotionDB.WorkloadDBs,
+		FinanceDBs:     config.Config.NotionDB.FinDBs,
+		ContributorsDB: config.Config.NotionDB.ContributorsDB,
 	}
 }

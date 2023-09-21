@@ -1,0 +1,64 @@
+appname = "dnotion"
+
+# notion db
+[notiondb]
+	client_secret = "<your client secret>" # secret for get redirect info
+    client_id = "<your client id>"
+	#mapdao_client_secret = "<your client secret>"
+    #mapdao_client_id = "<your client id>"
+	base_url = "https://api.notion.com"
+	version = "2022-06-28"
+
+    # dbs
+    db_secret = "<notion db secret>" # secret for update dbs
+    # contributors db
+    db_contributors = "<notion db id>"
+    # task db
+    task_dbs = [
+        "<uuid>", # content
+        "<uuid>", # translation
+        "<uuid>", # submission
+        "<uuid>", # promotion
+        "<uuid>", # activity
+        "<uuid>", # admin
+        "<uuid>"  # dev
+    ]
+    # workload db
+    workload_dbs = [
+        "<uuid>", # content
+        "<uuid>", # translation
+        "<uuid>", # submission
+        "<uuid>", # promotion
+        "<uuid>", # activity
+        "<uuid>", # admin
+        "<uuid>", # dev
+        "<uuid>", # psp market
+        "<uuid>" # psp prod
+    ]
+    # finance db
+    finance_dbs = [
+        "<uuid>", # content
+        "<uuid>", # translation
+        "<uuid>", # submission
+        "<uuid>", # promotion
+        "<uuid>", # activity
+        "<uuid>", # admin
+        "<uuid>", # dev
+        "<uuid>", # psp market
+        "<uuid>"  # psp prod
+    ]
+
+# everpay
+[everpay]
+	eth_prvkey = "<priv key>"
+	everpay_url = "https://api.everpay.io"
+
+# onboard
+
+[log]
+    save_file = false
+    file_name = "dnotion.log"
+
+# service
+[service]
+	port = 3002

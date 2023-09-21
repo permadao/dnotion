@@ -5,20 +5,21 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/db"
 	log "github.com/sirupsen/logrus"
 )
 
 // check db count and return nid from failed dbs
 func (f *Finance) CheckAllDbsCountAndID() (faileddbs []string) {
-	faileddbs = append(faileddbs, f.CheckDbsCountAndID(f.NotionDB.WorkloadDBs)...)
-	faileddbs = append(faileddbs, f.CheckDbsCountAndID(f.NotionDB.FinanceDBs)...)
+	faileddbs = append(faileddbs, f.CheckDbsCountAndID(db.DB.WorkloadDBs)...)
+	faileddbs = append(faileddbs, f.CheckDbsCountAndID(db.DB.FinanceDBs)...)
 	return
 }
 
 func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 	for _, nid := range dbs {
-		count := f.NotionDB.GetCountFromDB(nid)
-		lastid := f.NotionDB.GetLastIDFromDB(nid)
+		count := db.DB.GetCountFromDB(nid)
+		lastid := db.DB.GetLastIDFromDB(nid)
 
 		if count != lastid {
 			log.Errorf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
@@ -29,11 +30,11 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 }
 
 func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
-	for i, fnid := range f.NotionDB.FinanceDBs {
+	for i, fnid := range db.DB.FinanceDBs {
 		t := time.Now()
 		log.Info("Checking fnid", fnid)
 
-		errs := f.CheckWorkloadAndAmount(fnid, f.NotionDB.WorkloadDBs[i])
+		errs := f.CheckWorkloadAndAmount(fnid, db.DB.WorkloadDBs[i])
 		errLogs = append(errLogs, errs...)
 
 		log.Info("Check done fnid", fnid, time.Since(t))
@@ -42,8 +43,8 @@ func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
 }
 
 func (f *Finance) CheckWorkloadAndAmount(fnid, wnid string) (errlogs []string) {
-	fins := f.NotionDB.GetAllPagesFromDB(fnid, nil)
-	works := f.NotionDB.GetAllPagesFromDB(wnid, nil)
+	fins := db.DB.GetAllPagesFromDB(fnid, nil)
+	works := db.DB.GetAllPagesFromDB(wnid, nil)
 
 	workToUSD := map[string]float64{} // id -> usd
 	for _, page := range works {

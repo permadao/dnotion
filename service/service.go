@@ -4,18 +4,11 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/permadao/dnotion/db"
-	"github.com/permadao/dnotion/fin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-var (
-	DB  *db.NotionDB
-	Fin *fin.Finance
-)
-
-func StartServe(ndb *db.NotionDB, fin *fin.Finance) {
+func StartServe() {
 	log.Info("Starting server...")
 
 	// router
@@ -40,7 +33,4 @@ func StartServe(ndb *db.NotionDB, fin *fin.Finance) {
 	if err != nil {
 		log.Fatal("run service error: ", err.Error())
 	}
-
-	DB = ndb
-	Fin = fin
 }

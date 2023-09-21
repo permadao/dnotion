@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/utils"
 	log "github.com/sirupsen/logrus"
 )
 
 func (n *Finance) PayAll() {
-	for _, v := range n.NotionDB.FinanceDBs {
+	for _, v := range db.DB.FinanceDBs {
 		t := time.Now()
 		log.Info("Paying, fid", v)
 
@@ -22,7 +23,7 @@ func (n *Finance) PayAll() {
 
 func (n *Finance) Pay(fnid string) {
 	// get Status is In progress
-	pages := n.NotionDB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
+	pages := db.DB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -52,7 +53,7 @@ func (n *Finance) Pay(fnid string) {
 		}
 
 		// update to done
-		if _, err := n.NotionDB.Client.UpdatePage(context.Background(), page.ID,
+		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
 			notion.UpdatePageParams{
 				DatabasePageProperties: notion.DatabasePageProperties{
 					"Status": notion.DatabasePageProperty{
@@ -72,7 +73,7 @@ func (n *Finance) Pay(fnid string) {
 		if err != nil {
 			log.Errorf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
 			// rollback
-			if _, err := n.NotionDB.Client.UpdatePage(context.Background(), page.ID,
+			if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
 				notion.UpdatePageParams{
 					DatabasePageProperties: notion.DatabasePageProperties{
 						"Status": notion.DatabasePageProperty{
@@ -87,7 +88,7 @@ func (n *Finance) Pay(fnid string) {
 
 		// update receipt
 		receipt := "https://scan.everpay.io/tx/" + tx.HexHash()
-		if _, err := n.NotionDB.Client.UpdatePage(context.Background(), page.ID,
+		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
 			notion.UpdatePageParams{
 				DatabasePageProperties: notion.DatabasePageProperties{
 					"Receipt(url)": notion.DatabasePageProperty{

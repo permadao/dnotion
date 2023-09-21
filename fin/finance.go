@@ -6,24 +6,25 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/db"
 	log "github.com/sirupsen/logrus"
 )
 
 func (f *Finance) UpdateAllWorkToFin() {
-	for i, v := range f.NotionDB.WorkloadDBs {
+	for i, v := range db.DB.WorkloadDBs {
 		t := time.Now()
 		log.Info("Update workload to finance, wid", v)
 
-		f.UpdateWorkToFin(v, f.NotionDB.FinanceDBs[i])
+		f.UpdateWorkToFin(v, db.DB.FinanceDBs[i])
 
-		log.Infof("Workload to Finance, %s/%s updated, since:%v\n\n", v, f.NotionDB.FinanceDBs[i], time.Since(t))
+		log.Infof("Workload to Finance, %s/%s updated, since:%v\n\n", v, db.DB.FinanceDBs[i], time.Since(t))
 	}
 }
 
 func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 	// get last Page id
-	wPageID := f.NotionDB.GetLastIDFromDB(workNid)
-	fPageID := f.NotionDB.GetLastIDFromDB(finNid)
+	wPageID := db.DB.GetLastIDFromDB(workNid)
+	fPageID := db.DB.GetLastIDFromDB(finNid)
 	// wPageID := 422
 	// fPageID := 420
 
@@ -31,7 +32,7 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 		fPageID++
 
 		fPageIDStr := fmt.Sprintf("%d", fPageID)
-		wpage, err := f.NotionDB.GetPageFromDBByID(workNid, fPageIDStr)
+		wpage, err := db.DB.GetPageFromDBByID(workNid, fPageIDStr)
 		if err != nil {
 			msg := fmt.Sprintf("error getting page from workload DB, wid:%s fpid:%s, err:%s", workNid, fPageIDStr, err)
 			log.Error(msg)
@@ -80,7 +81,7 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 		}
 
 		// create finance expense
-		if _, err := f.NotionDB.Client.CreatePage(context.Background(), notion.CreatePageParams{
+		if _, err := db.DB.DBClient.CreatePage(context.Background(), notion.CreatePageParams{
 			ParentType:             notion.ParentTypeDatabase,
 			ParentID:               finNid,
 			DatabasePageProperties: &dpp,

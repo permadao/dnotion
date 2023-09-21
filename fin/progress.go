@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/db"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,7 +15,7 @@ func (f *Finance) UpdateAllFinToProgress(
 	actualToken string, actualPrice float64,
 	targetToken string, targetPrice float64,
 ) (errs []string) {
-	for _, v := range f.NotionDB.FinanceDBs {
+	for _, v := range db.DB.FinanceDBs {
 		t := time.Now()
 		log.Info("Update Finance to progress, fid", v)
 
@@ -39,7 +40,7 @@ func (f *Finance) UpdateFinToProgress(
 	}
 
 	// get Status is Not started & Workload Status is Acctual txs
-	pages := f.NotionDB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
+	pages := db.DB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -64,7 +65,7 @@ func (f *Finance) UpdateFinToProgress(
 		},
 	})
 	for _, page := range pages {
-		if _, err := f.NotionDB.Client.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
+		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
 			DatabasePageProperties: notion.DatabasePageProperties{
 				"Actual Token": notion.DatabasePageProperty{
 					Select: &notion.SelectOptions{Name: actualToken},
