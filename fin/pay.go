@@ -2,6 +2,7 @@ package fin
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/dstotijn/go-notion"
@@ -11,18 +12,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (n *Finance) PayAll() {
+func (n *Finance) PayAll() (errlogs []string) {
 	for _, v := range db.DB.FinanceDBs {
 		t := time.Now()
 		log.Info("Paying, fid", v)
 
-		n.Pay(v)
+		errs := n.Pay(v)
+		errlogs = append(errlogs, errs...)
 
 		log.Infof("Finance payment, %s updated, since: %v", v, time.Since(t))
 	}
+	return
 }
 
-func (n *Finance) Pay(fnid string) {
+func (n *Finance) Pay(fnid string) (errs []string) {
 	// get Status is In progress
 	pages := db.DB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
@@ -62,7 +65,9 @@ func (n *Finance) Pay(fnid string) {
 					},
 				},
 			}); err != nil {
-			log.Errorf("Update nid/id: %v/%v to `done` failed. %v", fnid, page.ID, err)
+			msg := fmt.Sprintf("Update nid/id: %v/%v to `done` failed. %v", fnid, page.ID, err)
+			log.Error(msg)
+			errs = append(errs, msg)
 			continue
 		}
 
@@ -72,7 +77,9 @@ func (n *Finance) Pay(fnid string) {
 			utils.FloatToBigInt(token), wallet,
 			`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
 		if err != nil {
-			log.Errorf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
+			msg := fmt.Sprintf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
+			log.Error(msg)
+			errs = append(errs, msg)
 			// rollback
 			if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
 				notion.UpdatePageParams{
@@ -82,13 +89,15 @@ func (n *Finance) Pay(fnid string) {
 						},
 					},
 				}); err != nil {
-				log.Errorf("rollback nid/id: %v/%v to `In progress` failed. %v", fnid, page.ID, err)
+				msg := fmt.Sprintf("rollback nid/id: %v/%v to `In progress` failed. %v", fnid, page.ID, err)
+				log.Error(msg)
+				errs = append(errs, msg)
 			}
 			continue
 		}
 
 		// update receipt
-		receipt := "https://scan.everpay.io/tx/" + tx.HexHash()
+		receipt := config.Config.Everpay.ScanUrl + "/tx/" + tx.HexHash()
 		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
 			notion.UpdatePageParams{
 				DatabasePageProperties: notion.DatabasePageProperties{
@@ -97,8 +106,10 @@ func (n *Finance) Pay(fnid string) {
 					},
 				},
 			}); err != nil {
-			log.Errorf("Update nid/id: %v/%v receipt failed. %v", fnid, page.ID, err)
+			msg := fmt.Sprintf("Update nid/id: %v/%v receipt failed. %v", fnid, page.ID, err)
+			log.Error(msg)
+			errs = append(errs, msg)
 		}
-
 	}
+	return
 }

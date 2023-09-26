@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/permadao/dnotion/fin"
+	log "github.com/sirupsen/logrus"
 )
 
 // onboard
@@ -23,6 +24,7 @@ func CheckAllDbsCountAndID(c *gin.Context) {
 			"code":      http.StatusInternalServerError,
 			"message":   msg,
 		})
+		return
 	}
 
 	// sucess
@@ -42,6 +44,7 @@ func CheckAllWorkloadAndAmount(c *gin.Context) {
 			"code":      http.StatusInternalServerError,
 			"message":   msg,
 		})
+		return
 	}
 	// sucess
 	c.JSON(http.StatusOK, gin.H{
@@ -60,6 +63,7 @@ func UpdateAllWorkToFin(c *gin.Context) {
 			"code":      http.StatusInternalServerError,
 			"message":   msg,
 		})
+		return
 	}
 	// sucess
 	c.JSON(http.StatusOK, gin.H{
@@ -68,10 +72,128 @@ func UpdateAllWorkToFin(c *gin.Context) {
 	})
 }
 
-func UpdateAllFinToProgress(c *gin.Context) {}
+func UpdateAllFinToProgress(c *gin.Context) {
+	var req UpdateFinParams
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		log.Errorln(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   err.Error(),
+		})
+		return
+	}
 
-func UpdateFinToProgress(c *gin.Context) {}
+	faileds := fin.Fin.UpdateAllFinToProgress(
+		req.PaymentDateStr,
+		req.ActualToken, req.ActualPrice,
+		req.TargetToken, req.TargetPrice)
+	// return failed
+	if len(faileds) > 0 {
+		msg := strings.Join(faileds, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+		return
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
 
-func PayAll(c *gin.Context) {}
+}
 
-func Pay(c *gin.Context) {}
+func UpdateFinToProgress(c *gin.Context) {
+	var req UpdateFinParams
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		log.Errorln(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   err.Error(),
+		})
+		return
+	}
+	if req.FinNid == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   "fin nid is nil",
+		})
+		return
+	}
+	faileds := fin.Fin.UpdateFinToProgress(
+		req.FinNid, req.PaymentDateStr,
+		req.ActualToken, req.ActualPrice,
+		req.TargetToken, req.TargetPrice)
+	// return failed
+	if len(faileds) > 0 {
+		msg := strings.Join(faileds, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+		return
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
+}
+
+func PayAll(c *gin.Context) {
+	faileds := fin.Fin.PayAll()
+	// return failed
+	if len(faileds) > 0 {
+		msg := strings.Join(faileds, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+		return
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
+}
+
+func Pay(c *gin.Context) {
+	var fnid string
+	err := c.ShouldBindJSON(&fnid)
+	if err != nil {
+		log.Errorln(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   err.Error(),
+		})
+		return
+	}
+
+	faileds := fin.Fin.Pay(fnid)
+	// return failed
+	if len(faileds) > 0 {
+		msg := strings.Join(faileds, "\n")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"requestID": requestid.Get(c),
+			"code":      http.StatusInternalServerError,
+			"message":   msg,
+		})
+		return
+	}
+	// sucess
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "OK",
+	})
+}
