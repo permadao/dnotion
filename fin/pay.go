@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/utils"
 	log "github.com/sirupsen/logrus"
@@ -67,9 +68,9 @@ func (n *Finance) Pay(fnid string) {
 
 		// payment
 		tx, err := n.everpay.Transfer(
-			"arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543",
+			config.Config.Everpay.TokenTag,
 			utils.FloatToBigInt(token), wallet,
-			`{"appName": "permadao-payroll", "permadaoUrl": "`+page.URL+`"}`)
+			`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
 		if err != nil {
 			log.Errorf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
 			// rollback

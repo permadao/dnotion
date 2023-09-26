@@ -27,8 +27,6 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 	// get last Page id
 	wPageID := db.DB.GetLastIDFromDB(workNid)
 	fPageID := db.DB.GetLastIDFromDB(finNid)
-	// wPageID := 422
-	// fPageID := 420
 
 	for fPageID < wPageID {
 		fPageID++

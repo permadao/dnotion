@@ -15,4 +15,5 @@ func TestConfig(t *testing.T) {
 	a.Equal(Config.NotionDB.BaseUrl, "https://api.notion.com")
 	a.Equal(len(Config.NotionDB.FinDBs), 9)
 	a.Equal(len(Config.NotionDB.TaskDBs), 7)
+	a.Equal(Config.Everpay.TokenTag, "arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543")
 }
