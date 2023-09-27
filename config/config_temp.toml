@@ -2,13 +2,11 @@ appname = "dnotion"
 
 # notion db
 [notiondb]
-	client_secret = "<your client secret>" # secret for get redirect info
-    client_id = "<your client id>"
-	#mapdao_client_secret = "<your client secret>"
-    #mapdao_client_id = "<your client id>"
-	base_url = "https://api.notion.com"
+    base_url = "https://api.notion.com"
 	version = "2022-06-28"
-
+    # secret for get redirect info
+	client_secret = "<your client secret>" 
+    client_id = "<your client id>"
     # dbs
     db_secret = "<notion db secret>" # secret for update dbs
     # contributors db
