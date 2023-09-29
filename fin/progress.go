@@ -1,7 +1,6 @@
 package fin
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -31,13 +30,8 @@ func (f *Finance) UpdateFinToProgress(
 	actualToken string, actualPrice float64,
 	targetToken string, targetPrice float64,
 ) (errs []string) {
-	paymentDate, err := notion.ParseDateTime(paymentDateStr)
-	if err != nil {
-		msg := fmt.Sprintf("invalid payment date %s", paymentDateStr)
-		log.Error(msg)
-		errs = append(errs, msg)
-		return
-	}
+	t := time.Now()
+	log.Info("update fin to progress, fin_nid: ", finNid)
 
 	// get Status is Not started & Workload Status is Acctual txs
 	pages := db.DB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
@@ -64,33 +58,21 @@ func (f *Finance) UpdateFinToProgress(
 			},
 		},
 	})
+	// update page
 	for _, page := range pages {
-		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID, notion.UpdatePageParams{
-			DatabasePageProperties: notion.DatabasePageProperties{
-				"Actual Token": notion.DatabasePageProperty{
-					Select: &notion.SelectOptions{Name: actualToken},
-				},
-				"Actual Price": notion.DatabasePageProperty{
-					Number: &actualPrice,
-				},
-				"Target Token": notion.DatabasePageProperty{
-					Select: &notion.SelectOptions{Name: targetToken},
-				},
-				"Target Price": notion.DatabasePageProperty{
-					Number: &targetPrice,
-				},
-				"Status": notion.DatabasePageProperty{
-					Status: &notion.SelectOptions{Name: "In progress"},
-				},
-				"Payment Date": notion.DatabasePageProperty{
-					Date: &notion.Date{Start: paymentDate},
-				},
-			},
-		}); err != nil {
+		finData := db.FinData{}
+		finData.AcualToken = actualToken
+		finData.ActualPrice = actualPrice
+		finData.TargetToken = targetToken
+		finData.TargetPrice = targetPrice
+		finData.Status = "In progress"
+		finData.PaymentDate = paymentDateStr
+		if err := finData.UpdatePage(page.ID); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v failed. %v", finNid, page.ID, err)
 			log.Error(msg)
 			errs = append(errs, msg)
 		}
 	}
+	log.Infof("Update done, fin_nid: %s, time: %s", finNid, time.Since(t).String())
 	return
 }

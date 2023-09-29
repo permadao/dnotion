@@ -1,7 +1,6 @@
 package fin
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -44,27 +43,38 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 	for _, page := range pages {
 		// get wallet and amount
 		p := page.Properties.(notion.DatabasePageProperties)
-		token := 0.0
-		if p["Target Amount"].Formula != nil {
-			token = *p["Target Amount"].Formula.Number
-		}
+		// token := 0.0
+		// if p["Target Amount"].Formula != nil {
+		// 	token = *p["Target Amount"].Formula.Number
+		// }
+
+		// wallet := ""
+		// if len(p["Contributor"].Relation) > 0 {
+		// 	if v, ok := n.nidToWallet[p["Contributor"].Relation[0].ID]; ok {
+		// 		wallet = v
+		// 	}
+		// }
+
+		pageData := db.NewFinDataFromProps(&p)
+		token := pageData.TargetAmount
 
 		wallet := ""
-		if len(p["Contributor"].Relation) > 0 {
-			if v, ok := n.nidToWallet[p["Contributor"].Relation[0].ID]; ok {
+		if pageData.Contributor != "" {
+			if v, ok := n.nidToWallet[pageData.Contributor]; ok {
 				wallet = v
 			}
 		}
+		if wallet == "" {
+			msg := fmt.Sprintf("Contributor not found, nid/id: %v/%v", fnid, page.ID)
+			log.Error(msg)
+			errs = append(errs, msg)
+			continue
+		}
 
 		// update to done
-		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
-			notion.UpdatePageParams{
-				DatabasePageProperties: notion.DatabasePageProperties{
-					"Status": notion.DatabasePageProperty{
-						Status: &notion.SelectOptions{Name: "Done"},
-					},
-				},
-			}); err != nil {
+		finData := db.FinData{}
+		finData.Status = "Done"
+		if err := finData.UpdatePage(page.ID); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v to `done` failed. %v", fnid, page.ID, err)
 			log.Error(msg)
 			errs = append(errs, msg)
@@ -81,14 +91,8 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 			log.Error(msg)
 			errs = append(errs, msg)
 			// rollback
-			if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
-				notion.UpdatePageParams{
-					DatabasePageProperties: notion.DatabasePageProperties{
-						"Status": notion.DatabasePageProperty{
-							Status: &notion.SelectOptions{Name: "In progress"},
-						},
-					},
-				}); err != nil {
+			finData.Status = "In progress"
+			if err := finData.UpdatePage(page.ID); err != nil {
 				msg := fmt.Sprintf("rollback nid/id: %v/%v to `In progress` failed. %v", fnid, page.ID, err)
 				log.Error(msg)
 				errs = append(errs, msg)
@@ -98,14 +102,9 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 
 		// update receipt
 		receipt := config.Config.Everpay.ScanUrl + "/tx/" + tx.HexHash()
-		if _, err := db.DB.DBClient.UpdatePage(context.Background(), page.ID,
-			notion.UpdatePageParams{
-				DatabasePageProperties: notion.DatabasePageProperties{
-					"Receipt(url)": notion.DatabasePageProperty{
-						URL: &receipt,
-					},
-				},
-			}); err != nil {
+		receiptData := db.FinData{}
+		receiptData.ReceiptUrl = receipt
+		if err := receiptData.UpdatePage(page.ID); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v receipt failed. %v", fnid, page.ID, err)
 			log.Error(msg)
 			errs = append(errs, msg)

@@ -18,13 +18,17 @@ func (f *Finance) CheckAllDbsCountAndID() (faileddbs []string) {
 
 func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 	for _, nid := range dbs {
+		t := time.Now()
+		log.Info("Checking count and id fnid: ", nid)
 		count := db.DB.GetCountFromDB(nid)
 		lastid := db.DB.GetLastIDFromDB(nid)
 
 		if count != lastid {
-			log.Errorf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
-			faileddbs = append(faileddbs, nid)
+			msg := fmt.Sprintf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
+			log.Error(msg)
+			faileddbs = append(faileddbs, msg)
 		}
+		log.Infof("Check done, fin_nid: %s, time: %s", nid, time.Since(t).String())
 	}
 	return
 }
@@ -32,12 +36,12 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
 	for i, fnid := range db.DB.FinanceDBs {
 		t := time.Now()
-		log.Info("Checking fnid", fnid)
+		log.Info("Checking workload and amount fnid: ", fnid)
 
 		errs := f.CheckWorkloadAndAmount(fnid, db.DB.WorkloadDBs[i])
 		errLogs = append(errLogs, errs...)
 
-		log.Info("Check done fnid", fnid, time.Since(t))
+		log.Infof("Check done, fin_nid: %s, time: %s", fnid, time.Since(t).String())
 	}
 	return
 }

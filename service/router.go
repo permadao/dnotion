@@ -10,7 +10,7 @@ func InitRouter(r *gin.Engine) {
 
 	// finance
 	group.GET("/finance/checkid", CheckAllDbsCountAndID)
-	group.GET("/finance/checkAmount", CheckAllWorkloadAndAmount)
+	group.GET("/finance/checkamount", CheckAllWorkloadAndAmount)
 	group.POST("/finance/updatework", UpdateAllWorkToFin)
 	group.POST("/finance/updateallfin", UpdateAllFinToProgress)
 	group.POST("/finance/updatefin", UpdateFinToProgress)
