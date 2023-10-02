@@ -43,18 +43,6 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 	for _, page := range pages {
 		// get wallet and amount
 		p := page.Properties.(notion.DatabasePageProperties)
-		// token := 0.0
-		// if p["Target Amount"].Formula != nil {
-		// 	token = *p["Target Amount"].Formula.Number
-		// }
-
-		// wallet := ""
-		// if len(p["Contributor"].Relation) > 0 {
-		// 	if v, ok := n.nidToWallet[p["Contributor"].Relation[0].ID]; ok {
-		// 		wallet = v
-		// 	}
-		// }
-
 		pageData := db.NewFinDataFromProps(&p)
 		token := pageData.TargetAmount
 

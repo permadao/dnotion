@@ -8,13 +8,15 @@ import (
 )
 
 type FinData struct {
-	Nid            string
-	AcualToken     string
+	ID             string
+	Amount         float64
+	ActualToken    string
 	ActualPrice    float64
 	TargetToken    string
 	TargetPrice    float64
 	TargetAmount   float64
 	Status         string
+	WorkloadID     string
 	WorkloadStatus string
 	PaymentDate    string
 	Contributor    string
@@ -35,12 +37,36 @@ func (f *FinData) UpdatePage(pageId string) error {
 	return err
 }
 
+func (f *FinData) CreatePage(parentID string) error {
+	_, err := DB.DBClient.CreatePage(context.Background(), notion.CreatePageParams{
+		ParentType:             notion.ParentTypeDatabase,
+		ParentID:               parentID,
+		DatabasePageProperties: f.SerializePropertys(),
+	})
+	return err
+}
+
 func (f *FinData) SerializePropertys() *notion.DatabasePageProperties {
 	props := notion.DatabasePageProperties{}
-
-	if f.AcualToken != "" {
+	if f.ID != "" {
+		props["ID"] = notion.DatabasePageProperty{
+			Title: []notion.RichText{
+				{
+					Text: &notion.Text{
+						Content: f.ID,
+					},
+				},
+			},
+		}
+	}
+	if f.Amount != 0 {
+		props["Amount"] = notion.DatabasePageProperty{
+			Number: &f.Amount,
+		}
+	}
+	if f.ActualToken != "" {
 		props["Actual Token"] = notion.DatabasePageProperty{
-			Select: &notion.SelectOptions{Name: f.AcualToken},
+			Select: &notion.SelectOptions{Name: f.ActualToken},
 		}
 	}
 	if f.ActualPrice != 0 {
@@ -68,6 +94,13 @@ func (f *FinData) SerializePropertys() *notion.DatabasePageProperties {
 			Status: &notion.SelectOptions{Name: f.WorkloadStatus},
 		}
 	}
+	if f.WorkloadID != "" {
+		props["Workload ID"] = notion.DatabasePageProperty{
+			Relation: []notion.Relation{
+				{ID: f.WorkloadID},
+			},
+		}
+	}
 	if f.PaymentDate != "" {
 		date, err := notion.ParseDateTime(f.PaymentDate)
 		if err != nil {
@@ -86,13 +119,25 @@ func (f *FinData) SerializePropertys() *notion.DatabasePageProperties {
 			URL: &f.ReceiptUrl,
 		}
 	}
+	if f.Contributor != "" {
+		props["Contributor"] = notion.DatabasePageProperty{
+			Relation: []notion.Relation{
+				{ID: f.Contributor},
+			},
+		}
+	}
 	return &props
 }
 
 func (f *FinData) DeserializePropertys(props notion.DatabasePageProperties) {
-	f.Nid = props["ID"].ID
+	if len(props["ID"].Title) > 0 {
+		f.ID = props["ID"].Title[0].Text.Content
+	}
+	if props["Amount"].Number != nil {
+		f.Amount = *props["Amount"].Number
+	}
 	if props["Actual Token"].Select != nil {
-		f.AcualToken = props["Actual Token"].Select.Name
+		f.ActualToken = props["Actual Token"].Select.Name
 	}
 	if props["Actual Price"].Number != nil {
 		f.ActualPrice = *props["Actual Price"].Number
@@ -108,6 +153,9 @@ func (f *FinData) DeserializePropertys(props notion.DatabasePageProperties) {
 	}
 	if props["Status"].Select != nil {
 		f.Status = props["Status"].Select.Name
+	}
+	if len(props["Workload ID"].Relation) > 0 {
+		f.WorkloadID = props["Workload ID"].Relation[0].ID
 	}
 	if props["Workload Status"].Select != nil {
 		f.WorkloadStatus = props["Workload Status"].Select.Name

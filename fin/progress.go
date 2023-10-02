@@ -61,7 +61,7 @@ func (f *Finance) UpdateFinToProgress(
 	// update page
 	for _, page := range pages {
 		finData := db.FinData{}
-		finData.AcualToken = actualToken
+		finData.ActualToken = actualToken
 		finData.ActualPrice = actualPrice
 		finData.TargetToken = targetToken
 		finData.TargetPrice = targetPrice

@@ -14,7 +14,7 @@ type WorkloadData struct {
 	Note           string
 	Usd            float64 // usd amount except translation guide
 	TranslattonUsd float64 // !! usd amount for translation guide
-	ContributorID  string
+	Contributor    string
 }
 
 func NewWrokloadDataFromProps(props *notion.DatabasePageProperties) *WorkloadData {
@@ -31,9 +31,28 @@ func (f *WorkloadData) UpdatePage(pageId string) error {
 	return err
 }
 
+func (f *WorkloadData) CreatePage(parentID string) error {
+	_, err := DB.DBClient.CreatePage(context.Background(), notion.CreatePageParams{
+		ParentType:             notion.ParentTypeDatabase,
+		ParentID:               parentID,
+		DatabasePageProperties: f.SerializePropertys(),
+	})
+	return err
+}
+
 func (f *WorkloadData) SerializePropertys() *notion.DatabasePageProperties {
 	props := notion.DatabasePageProperties{}
-
+	if f.ID != "" {
+		props["ID"] = notion.DatabasePageProperty{
+			Title: []notion.RichText{
+				{
+					Text: &notion.Text{
+						Content: f.ID,
+					},
+				},
+			},
+		}
+	}
 	if f.Status != "" {
 		props["Status"] = notion.DatabasePageProperty{
 			Status: &notion.SelectOptions{Name: f.Status},
@@ -81,11 +100,11 @@ func (f *WorkloadData) SerializePropertys() *notion.DatabasePageProperties {
 			},
 		}
 	}
-	if f.ContributorID != "" {
+	if f.Contributor != "" {
 		props["Contributor"] = notion.DatabasePageProperty{
 			People: []notion.User{
 				{
-					BaseUser: notion.BaseUser{ID: f.ContributorID},
+					BaseUser: notion.BaseUser{ID: f.Contributor},
 				},
 			},
 		}
@@ -94,22 +113,27 @@ func (f *WorkloadData) SerializePropertys() *notion.DatabasePageProperties {
 }
 
 func (f *WorkloadData) DeserializePropertys(props notion.DatabasePageProperties) {
-	f.ID = props["ID"].ID
+	if len(props["ID"].Title) > 0 {
+		f.ID = props["ID"].Title[0].Text.Content
+	}
 	if props["Status"].Select != nil {
 		f.Status = props["Status"].Select.Name
 	}
 	if props["Task Status"].Select != nil {
 		f.TaskStatus = props["Task Status"].Select.Name
 	}
-	if props["Name"].RichText != nil {
+	if len(props["Name"].RichText) > 0 {
 		f.Name = props["Name"].RichText[0].Text.Content
 	}
-	if props["Note"].RichText != nil {
+	if len(props["Note"].RichText) > 0 {
 		f.Note = props["Note"].RichText[0].Text.Content
 	}
 	if props["USD"].Number != nil {
 		f.Usd = *props["USD"].Number
 	} else if props["USD"].Formula != nil {
 		f.TranslattonUsd = *props["USD"].Formula.Number
+	}
+	if len(props["Contributor"].People) > 0 {
+		f.Contributor = props["Contributor"].People[0].BaseUser.ID
 	}
 }

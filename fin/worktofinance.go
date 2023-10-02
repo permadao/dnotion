@@ -1,7 +1,6 @@
 package fin
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -40,52 +39,25 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 			continue
 		}
 		wpagep := wpage.Properties.(notion.DatabasePageProperties)
-		wusd := 0.0
-		if wpagep["USD"].Number != nil {
-			wusd = *wpagep["USD"].Number
-		} else if wpagep["USD"].Formula != nil {
-			wusd = *wpagep["USD"].Formula.Number
-		}
+		workloadData := db.NewWrokloadDataFromProps(&wpagep)
+		wusd := workloadData.Usd
 
 		// generate DatabasePageProperties
-		dpp := notion.DatabasePageProperties{
-			"ID": notion.DatabasePageProperty{
-				Title: []notion.RichText{
-					{
-						Text: &notion.Text{
-							Content: fPageIDStr,
-						},
-					},
-				},
-			},
-			"Workload ID": notion.DatabasePageProperty{
-				Relation: []notion.Relation{
-					{ID: wpage.ID},
-				},
-			},
-			// "Actual Token": notion.DatabasePageProperty{
-			// 	Select: &notion.SelectOptions{Name: "USDC"},
-			// },
-			"Amount": notion.DatabasePageProperty{
-				Number: &wusd,
-			},
-		}
+		dpp := db.FinData{}
+		dpp.ID = fPageIDStr
+		dpp.WorkloadID = wpage.ID
+		dpp.Amount = wusd
+		//dpp.ActualToken = "USDC"
+
 		// add contributors to properties
-		if len(wpagep["Contributor"].People) > 0 {
-			if v, ok := f.uidToNid[wpagep["Contributor"].People[0].BaseUser.ID]; ok {
-				dpp["Contributor"] = notion.DatabasePageProperty{
-					Relation: []notion.Relation{
-						{ID: v},
-					}}
+		if workloadData.Contributor != "" {
+			if v, ok := f.uidToNid[workloadData.Contributor]; ok {
+				dpp.Contributor = v
 			}
 		}
 
 		// create finance expense
-		if _, err := db.DB.DBClient.CreatePage(context.Background(), notion.CreatePageParams{
-			ParentType:             notion.ParentTypeDatabase,
-			ParentID:               finNid,
-			DatabasePageProperties: &dpp,
-		}); err != nil {
+		if err := dpp.CreatePage(finNid); err != nil {
 			msg := "create page failed:" + err.Error()
 			log.Error(msg)
 			errlogs = append(errlogs, msg)
