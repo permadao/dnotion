@@ -40,7 +40,7 @@ func (f *Finance) UpdateFinToProgress(
 				Property: "Status",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Status: &notion.StatusDatabaseQueryFilter{
-						Equals: "Not started",
+						Equals: db.StatusNotStarted,
 					},
 				},
 			},
@@ -50,7 +50,7 @@ func (f *Finance) UpdateFinToProgress(
 					Rollup: &notion.RollupDatabaseQueryFilter{
 						Any: &notion.DatabaseQueryPropertyFilter{
 							Status: &notion.StatusDatabaseQueryFilter{
-								Equals: "Accrual",
+								Equals: db.StatusAccrual,
 							},
 						},
 					},
@@ -65,7 +65,7 @@ func (f *Finance) UpdateFinToProgress(
 		finData.ActualPrice = actualPrice
 		finData.TargetToken = targetToken
 		finData.TargetPrice = targetPrice
-		finData.Status = "In progress"
+		finData.Status = db.StatusInProgress
 		finData.PaymentDate = paymentDateStr
 		if err := finData.UpdatePage(page.ID); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v failed. %v", finNid, page.ID, err)

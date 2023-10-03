@@ -32,7 +32,7 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 				Property: "Status",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Status: &notion.StatusDatabaseQueryFilter{
-						Equals: "In progress",
+						Equals: db.StatusInProgress,
 					},
 				},
 			},
@@ -61,7 +61,7 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 
 		// update to done
 		finData := db.FinData{}
-		finData.Status = "Done"
+		finData.Status = db.StatusDone
 		if err := finData.UpdatePage(page.ID); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v to `done` failed. %v", fnid, page.ID, err)
 			log.Error(msg)
@@ -79,7 +79,7 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 			log.Error(msg)
 			errs = append(errs, msg)
 			// rollback
-			finData.Status = "In progress"
+			finData.Status = db.StatusInProgress
 			if err := finData.UpdatePage(page.ID); err != nil {
 				msg := fmt.Sprintf("rollback nid/id: %v/%v to `In progress` failed. %v", fnid, page.ID, err)
 				log.Error(msg)
