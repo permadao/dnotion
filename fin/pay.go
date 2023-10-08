@@ -26,7 +26,7 @@ func (n *Finance) PayAll() (errlogs []string) {
 
 func (n *Finance) Pay(fnid string) (errs []string) {
 	// get Status is In progress
-	pages := db.DB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
+	pages, err := db.DB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -38,6 +38,10 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 			},
 		},
 	})
+	if err != nil {
+		errs = append(errs, err.Error())
+		return
+	}
 
 	// for payments
 	for _, page := range pages {

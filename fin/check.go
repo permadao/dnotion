@@ -20,9 +20,20 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 	for _, nid := range dbs {
 		t := time.Now()
 		log.Info("Checking count and id fnid: ", nid)
-		count := db.DB.GetCountFromDB(nid)
-		lastid := db.DB.GetLastIDFromDB(nid)
-
+		count, err := db.DB.GetCountFromDB(nid)
+		if err != nil {
+			msg := fmt.Sprintf("get count failed, nid: %s, err: %v\n", nid, err)
+			log.Error(msg)
+			faileddbs = append(faileddbs, msg)
+			continue
+		}
+		lastid, err := db.DB.GetLastIDFromDB(nid)
+		if err != nil {
+			msg := fmt.Sprintf("get last id failed, nid: %s, err: %v\n", nid, err)
+			log.Error(msg)
+			faileddbs = append(faileddbs, msg)
+			continue
+		}
 		if count != lastid {
 			msg := fmt.Sprintf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
 			log.Error(msg)
@@ -47,8 +58,20 @@ func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
 }
 
 func (f *Finance) CheckWorkloadAndAmount(fnid, wnid string) (errlogs []string) {
-	fins := db.DB.GetAllPagesFromDB(fnid, nil)
-	works := db.DB.GetAllPagesFromDB(wnid, nil)
+	fins, err := db.DB.GetAllPagesFromDB(fnid, nil)
+	if err != nil {
+		msg := fmt.Sprintf("get fins failed, fnid: %s, err: %v\n", fnid, err)
+		log.Error(msg)
+		errlogs = append(errlogs, msg)
+		return
+	}
+	works, err := db.DB.GetAllPagesFromDB(wnid, nil)
+	if err != nil {
+		msg := fmt.Sprintf("get workloads failed, wnid: %s, err: %v\n", wnid, err)
+		log.Error(msg)
+		errlogs = append(errlogs, msg)
+		return
+	}
 
 	workToUSD := map[string]float64{} // id -> usd
 	for _, page := range works {

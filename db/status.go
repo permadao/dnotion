@@ -1,7 +1,7 @@
 package db
 
 const (
-	// workload
+	// workload & task
 	StatusNotStarted = "Not started"
 	StatusInProgress = "In progress"
 	StatusFailed     = "Failed"

@@ -30,7 +30,7 @@ func (db *NotionDB) GetPageFromDBByID(nid, id string) (*notion.Page, error) {
 	return &res.Results[0], nil
 }
 
-func (db *NotionDB) GetLastPageFromDB(nid string) (page notion.Page) {
+func (db *NotionDB) GetLastPageFromDB(nid string) (page notion.Page, err error) {
 	res, err := db.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Sorts: []notion.DatabaseQuerySort{
 			notion.DatabaseQuerySort{
@@ -42,20 +42,23 @@ func (db *NotionDB) GetLastPageFromDB(nid string) (page notion.Page) {
 		PageSize: 1,
 	})
 	if err != nil {
-		fmt.Println("err", err)
+		fmt.Println("get last page error: ", err)
 		return
 	}
 	if len(res.Results) < 1 {
+		err = fmt.Errorf("get last page failed, nid: %s", nid)
 		return
 	}
 
-	return res.Results[0]
+	return res.Results[0], nil
 }
 
-func (db *NotionDB) GetLastIDFromDB(nid string) (id int) {
-	page := db.GetLastPageFromDB(nid)
+func (db *NotionDB) GetLastIDFromDB(nid string) (id int, err error) {
+	page, err := db.GetLastPageFromDB(nid)
+	if err != nil {
+		return 0, err
+	}
 
-	var err error
 	idd := page.Properties.(notion.DatabasePageProperties)["ID"]
 	switch idd.Type {
 	case notion.DBPropTypeTitle:
@@ -70,12 +73,13 @@ func (db *NotionDB) GetLastIDFromDB(nid string) (id int) {
 	return
 }
 
-func (n *NotionDB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page) {
+func (n *NotionDB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page, err error) {
 	hasMore := true
 	nextCursor := ""
 
 	for hasMore {
-		res, err := n.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+		var res notion.DatabaseQueryResponse
+		res, err = n.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 			Filter: filter,
 			Sorts: []notion.DatabaseQuerySort{
 				notion.DatabaseQuerySort{
@@ -87,7 +91,7 @@ func (n *NotionDB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFil
 			StartCursor: nextCursor,
 		})
 		if err != nil {
-			fmt.Println("err", err)
+			fmt.Println("query database error: ", err)
 			return
 		}
 
@@ -102,6 +106,10 @@ func (n *NotionDB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFil
 	return
 }
 
-func (n *NotionDB) GetCountFromDB(nid string) int {
-	return len(n.GetAllPagesFromDB(nid, nil))
+func (n *NotionDB) GetCountFromDB(nid string) (int, error) {
+	pages, err := n.GetAllPagesFromDB(nid, nil)
+	if err != nil {
+		return 0, err
+	}
+	return len(pages), nil
 }

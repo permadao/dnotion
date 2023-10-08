@@ -47,7 +47,7 @@ func create(prv, everpayURL string) *Finance {
 }
 
 func (f *Finance) initContributors() {
-	pages := db.DB.GetAllPagesFromDB(db.DB.ContributorsDB, nil)
+	pages, _ := db.DB.GetAllPagesFromDB(db.DB.ContributorsDB, nil)
 	for _, page := range pages {
 		p := page.Properties.(notion.DatabasePageProperties)
 		people := p["Notion"].People

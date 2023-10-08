@@ -34,7 +34,7 @@ func (f *Finance) UpdateFinToProgress(
 	log.Info("update fin to progress, fin_nid: ", finNid)
 
 	// get Status is Not started & Workload Status is Acctual txs
-	pages := db.DB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
+	pages, err := db.DB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -58,6 +58,12 @@ func (f *Finance) UpdateFinToProgress(
 			},
 		},
 	})
+	if err != nil {
+		msg := fmt.Sprintf("get pages failed, fin_nid:%s, error: %s", finNid, err.Error())
+		log.Error(msg)
+		errs = append(errs, msg)
+		return
+	}
 	// update page
 	for _, page := range pages {
 		finData := db.FinData{}

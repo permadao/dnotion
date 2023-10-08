@@ -24,8 +24,21 @@ func (f *Finance) UpdateAllWorkToFin() (errlogs []string) {
 
 func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 	// get last Page id
-	wPageID := db.DB.GetLastIDFromDB(workNid)
-	fPageID := db.DB.GetLastIDFromDB(finNid)
+	wPageID, err := db.DB.GetLastIDFromDB(workNid)
+	if err != nil {
+		msg := fmt.Sprintf("get last id from page failed:%s, workload nid: %s", err.Error(), workNid)
+		log.Error(msg)
+		errlogs = append(errlogs, msg)
+		return
+	}
+	fPageID, err := db.DB.GetLastIDFromDB(finNid)
+	if err != nil {
+		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), finNid)
+		log.Error(msg)
+		errlogs = append(errlogs, msg)
+		return
+
+	}
 
 	for fPageID < wPageID {
 		fPageID++
