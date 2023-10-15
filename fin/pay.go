@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	paySchema "github.com/everFinance/go-everpay/pay/schema"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/utils"
@@ -74,10 +75,23 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 		}
 
 		// payment
-		tx, err := n.everpay.Transfer(
-			config.Config.Everpay.TokenTag,
-			utils.FloatToBigInt(token), wallet,
-			`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
+		var tx *paySchema.Transaction
+		if pageData.ActualToken == "AR" {
+			tx, err = n.everpay.Transfer(
+				config.Config.Everpay.TokenTagAr,
+				utils.FloatToBigInt(token), wallet,
+				`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
+		} else if pageData.ActualToken == "MAP" {
+			tx, err = n.everpay.Transfer(
+				config.Config.Everpay.TokenTagMap,
+				utils.FloatToBigInt(token), wallet,
+				`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
+		} else {
+			msg := fmt.Sprintf("Unknown Token")
+			log.Error(msg)
+			continue
+		}
+
 		if err != nil {
 			msg := fmt.Sprintf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
 			log.Error(msg)

@@ -33,11 +33,12 @@ type DConfig struct {
 
 	// everpay
 	Everpay struct {
-		Url      string `mapstructure:"everpay_url"`
-		ScanUrl  string `mapstructure:"scan_url"`
-		PrivKey  string `mapstructure:"eth_prvkey"`
-		TokenTag string `mapstructure:"token_tag"`
-		AppName  string `mapstructure:"app_name"`
+		Url         string `mapstructure:"everpay_url"`
+		ScanUrl     string `mapstructure:"scan_url"`
+		PrivKey     string `mapstructure:"eth_prvkey"`
+		TokenTagAr  string `mapstructure:"token_tag_ar"`
+		TokenTagMap string `mapstructure:"token_tag_map"`
+		AppName     string `mapstructure:"app_name"`
 	} `mapstructure:"everpay"`
 
 	// log
