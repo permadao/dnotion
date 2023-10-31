@@ -1,4 +1,4 @@
-package fin
+package finance
 
 import "testing"
 

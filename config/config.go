@@ -6,9 +6,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Config *DConfig
-
-type DConfig struct {
+type Config struct {
 	AppName string `mapstructure:"appname"`
 
 	// service
@@ -48,7 +46,7 @@ type DConfig struct {
 	} `mapstructure:"log"`
 }
 
-func Init(file string) {
+func New(file string) *Config {
 	viper.SetConfigName(file)
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
@@ -56,7 +54,9 @@ func Init(file string) {
 		panic(fmt.Sprintf("read config failed: %s", err.Error()))
 	}
 
-	if err := viper.Unmarshal(&Config); err != nil {
+	config := Config{}
+	if err := viper.Unmarshal(&config); err != nil {
 		panic(fmt.Sprintf("Unmarshal config failed: %s", err.Error()))
 	}
+	return &config
 }
