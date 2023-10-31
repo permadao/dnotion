@@ -2,9 +2,11 @@ package fin
 
 import (
 	"fmt"
+	serverSchema "github.com/everFinance/go-everpay/sdk/schema"
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	paySchema "github.com/everFinance/go-everpay/pay/schema"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/utils"
@@ -12,11 +14,13 @@ import (
 )
 
 func (n *Finance) PayAll() (errlogs []string) {
+	TokenMap := n.everpay.GetTokens()
+
 	for _, v := range db.DB.FinanceDBs {
 		t := time.Now()
 		log.Info("Paying, fid", v)
 
-		errs := n.Pay(v)
+		errs := n.Pay(v, TokenMap)
 		errlogs = append(errlogs, errs...)
 
 		log.Infof("Finance payment, %s updated, since: %v", v, time.Since(t))
@@ -24,7 +28,7 @@ func (n *Finance) PayAll() (errlogs []string) {
 	return
 }
 
-func (n *Finance) Pay(fnid string) (errs []string) {
+func (n *Finance) Pay(fnid string, tokenMap map[string]serverSchema.TokenInfo) (errs []string) {
 	// get Status is In progress
 	pages, err := db.DB.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
@@ -74,10 +78,21 @@ func (n *Finance) Pay(fnid string) (errs []string) {
 		}
 
 		// payment
-		tx, err := n.everpay.Transfer(
-			config.Config.Everpay.TokenTag,
-			utils.FloatToBigInt(token), wallet,
-			`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
+		var tx *paySchema.Transaction
+		if pageInfo, ok := tokenMap[pageData.ActualToken]; !ok {
+			msg := fmt.Sprintf("Unknown Token")
+			log.Error(msg)
+			continue
+		} else {
+			tx, err = n.everpay.Transfer(
+				pageInfo.Tag,
+				utils.FloatToBigInt(token), wallet,
+				`{"appName": "`+config.Config.Everpay.AppName+`", "permadaoUrl": "`+page.URL+`"}`)
+			if err != nil {
+				log.WithError(err).Error("trasfer error")
+			}
+		}
+
 		if err != nil {
 			msg := fmt.Sprintf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
 			log.Error(msg)

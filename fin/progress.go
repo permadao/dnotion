@@ -66,7 +66,16 @@ func (f *Finance) UpdateFinToProgress(
 	}
 	// update page
 	for _, page := range pages {
+		properties, ok := page.Properties.(notion.DatabasePageProperties)
+		if !ok {
+			log.Error("Failed to assert page.Properties to notion.DatabasePageProperties")
+			continue
+		}
 		finData := db.FinData{}
+		finData.DeserializePropertys(properties)
+		if finData.AffiliatedDAO == "MapDAO" {
+			continue // If Affiliated DAO is MapDAO, skip the current iteration
+		}
 		finData.ActualToken = actualToken
 		finData.ActualPrice = actualPrice
 		finData.TargetToken = targetToken

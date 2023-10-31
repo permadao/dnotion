@@ -52,8 +52,7 @@ appname = "dnotion"
 	everpay_url = "https://api.everpay.io"
     scan_url = "https://scan.everpay.io"
     app_name = "permadao-payroll"
-    token_tag = "arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543"
-
+    token_tagar = "arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543"
 # onboard
 
 [log]

@@ -21,6 +21,7 @@ type FinData struct {
 	PaymentDate    string
 	Contributor    string
 	ReceiptUrl     string
+	AffiliatedDAO  string
 }
 
 func NewFinDataFromProps(props *notion.DatabasePageProperties) *FinData {
@@ -126,6 +127,11 @@ func (f *FinData) SerializePropertys() *notion.DatabasePageProperties {
 			},
 		}
 	}
+	if f.AffiliatedDAO != "" {
+		props["Affiliated DAO"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: f.AffiliatedDAO},
+		}
+	}
 	return &props
 }
 
@@ -168,5 +174,8 @@ func (f *FinData) DeserializePropertys(props notion.DatabasePageProperties) {
 	}
 	if len(props["Contributor"].Relation) > 0 {
 		f.Contributor = props["Contributor"].Relation[0].ID
+	}
+	if props["Affiliated DAO"].Select != nil {
+		f.AffiliatedDAO = props["Affiliated DAO"].Select.Name
 	}
 }
