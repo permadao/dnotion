@@ -45,5 +45,13 @@ func New(conf *config.Config, db *db.DB) *Finance {
 }
 
 func (f *Finance) initContributors() {
-	f.uidToNid, f.nidToWallet = f.db.GetAllContributors()
+	contributors, err := f.db.GetAllContributors()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, c := range contributors {
+		f.uidToNid[c.NotionID] = c.NID
+		f.nidToWallet[c.NID] = c.Wallet
+	}
 }
