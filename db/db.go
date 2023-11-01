@@ -5,9 +5,7 @@ import (
 	"github.com/permadao/dnotion/config"
 )
 
-var DB *NotionDB
-
-type NotionDB struct {
+type DB struct {
 	// notion client
 	DBClient       *notion.Client
 	RedirectClient *notion.Client
@@ -19,13 +17,14 @@ type NotionDB struct {
 	ContributorsDB string   // notion id
 }
 
-func Init() {
-	DB = &NotionDB{
-		DBClient:       notion.NewClient(config.Config.NotionDB.DBSecret),
-		RedirectClient: notion.NewClient(config.Config.NotionDB.ClientSecret),
-		TaskDBs:        config.Config.NotionDB.TaskDBs,
-		WorkloadDBs:    config.Config.NotionDB.WorkloadDBs,
-		FinanceDBs:     config.Config.NotionDB.FinDBs,
-		ContributorsDB: config.Config.NotionDB.ContributorsDB,
+func New(conf *config.Config) *DB {
+	return &DB{
+		DBClient:       notion.NewClient(conf.NotionDB.DBSecret),
+		RedirectClient: notion.NewClient(conf.NotionDB.ClientSecret),
+
+		TaskDBs:        conf.NotionDB.TaskDBs,
+		WorkloadDBs:    conf.NotionDB.WorkloadDBs,
+		FinanceDBs:     conf.NotionDB.FinDBs,
+		ContributorsDB: conf.NotionDB.ContributorsDB,
 	}
 }

@@ -1,4 +1,4 @@
-package fin
+package finance
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/db"
+	"github.com/permadao/dnotion/db/schema"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,7 +15,7 @@ func (f *Finance) UpdateAllFinToProgress(
 	actualToken string, actualPrice float64,
 	targetToken string, targetPrice float64,
 ) (errs []string) {
-	for _, v := range db.DB.FinanceDBs {
+	for _, v := range f.db.FinanceDBs {
 		t := time.Now()
 		log.Info("Update Finance to progress, fid", v)
 
@@ -34,7 +35,7 @@ func (f *Finance) UpdateFinToProgress(
 	log.Info("update fin to progress, fin_nid: ", finNid)
 
 	// get Status is Not started & Workload Status is Acctual txs
-	pages, err := db.DB.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
+	pages, err := f.db.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -66,14 +67,16 @@ func (f *Finance) UpdateFinToProgress(
 	}
 	// update page
 	for _, page := range pages {
-		finData := db.FinData{}
-		finData.ActualToken = actualToken
-		finData.ActualPrice = actualPrice
-		finData.TargetToken = targetToken
-		finData.TargetPrice = targetPrice
-		finData.Status = db.StatusInProgress
-		finData.PaymentDate = paymentDateStr
-		if err := finData.UpdatePage(page.ID); err != nil {
+		finData := schema.FinData{
+			NID:         page.ID,
+			ActualToken: actualToken,
+			ActualPrice: actualPrice,
+			TargetToken: targetToken,
+			TargetPrice: targetPrice,
+			Status:      db.StatusInProgress,
+			PaymentDate: paymentDateStr,
+		}
+		if err := f.db.UpdatePage(&finData); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v failed. %v", finNid, page.ID, err)
 			log.Error(msg)
 			errs = append(errs, msg)

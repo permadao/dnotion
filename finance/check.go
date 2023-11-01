@@ -1,18 +1,17 @@
-package fin
+package finance
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/permadao/dnotion/db"
 	log "github.com/sirupsen/logrus"
 )
 
 // check db count and return nid from failed dbs
 func (f *Finance) CheckAllDbsCountAndID() (faileddbs []string) {
-	faileddbs = append(faileddbs, f.CheckDbsCountAndID(db.DB.WorkloadDBs)...)
-	faileddbs = append(faileddbs, f.CheckDbsCountAndID(db.DB.FinanceDBs)...)
+	faileddbs = append(faileddbs, f.CheckDbsCountAndID(f.db.WorkloadDBs)...)
+	faileddbs = append(faileddbs, f.CheckDbsCountAndID(f.db.FinanceDBs)...)
 	return
 }
 
@@ -20,14 +19,14 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 	for _, nid := range dbs {
 		t := time.Now()
 		log.Info("Checking count and id fnid: ", nid)
-		count, err := db.DB.GetCountFromDB(nid)
+		count, err := f.db.GetCountFromDB(nid)
 		if err != nil {
 			msg := fmt.Sprintf("get count failed, nid: %s, err: %v\n", nid, err)
 			log.Error(msg)
 			faileddbs = append(faileddbs, msg)
 			continue
 		}
-		lastid, err := db.DB.GetLastIDFromDB(nid)
+		lastid, err := f.db.GetLastIDFromDB(nid)
 		if err != nil {
 			msg := fmt.Sprintf("get last id failed, nid: %s, err: %v\n", nid, err)
 			log.Error(msg)
@@ -45,11 +44,11 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 }
 
 func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
-	for i, fnid := range db.DB.FinanceDBs {
+	for i, fnid := range f.db.FinanceDBs {
 		t := time.Now()
 		log.Info("Checking workload and amount fnid: ", fnid)
 
-		errs := f.CheckWorkloadAndAmount(fnid, db.DB.WorkloadDBs[i])
+		errs := f.CheckWorkloadAndAmount(fnid, f.db.WorkloadDBs[i])
 		errLogs = append(errLogs, errs...)
 
 		log.Infof("Check done, fin_nid: %s, time: %s", fnid, time.Since(t).String())
@@ -58,14 +57,14 @@ func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
 }
 
 func (f *Finance) CheckWorkloadAndAmount(fnid, wnid string) (errlogs []string) {
-	fins, err := db.DB.GetAllPagesFromDB(fnid, nil)
+	fins, err := f.db.GetAllPagesFromDB(fnid, nil)
 	if err != nil {
 		msg := fmt.Sprintf("get fins failed, fnid: %s, err: %v\n", fnid, err)
 		log.Error(msg)
 		errlogs = append(errlogs, msg)
 		return
 	}
-	works, err := db.DB.GetAllPagesFromDB(wnid, nil)
+	works, err := f.db.GetAllPagesFromDB(wnid, nil)
 	if err != nil {
 		msg := fmt.Sprintf("get workloads failed, wnid: %s, err: %v\n", wnid, err)
 		log.Error(msg)
