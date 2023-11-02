@@ -45,8 +45,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 	// for payments
 	for _, page := range pages {
 		// get wallet and amount
-		p := page.Properties.(notion.DatabasePageProperties)
-		finData := db.NewFinDataFromProps(page.ID, &p)
+		finData := db.NewFinDataFromPage(page)
 		token := finData.TargetAmount
 
 		wallet := ""

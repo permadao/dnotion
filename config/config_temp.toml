@@ -11,6 +11,7 @@ appname = "dnotion"
     db_secret = "<notion db secret>" # secret for update dbs
     # contributors db
     db_contributors = "d808ed8b25d746beb267ad552b1d1bf5"
+	db_achievement = "f4870fdcf4ab4469bfb60662b9b8321e"
     # task db
     task_dbs = [
 		"f0fdcea614544768b5756a3fde23ff51", # content

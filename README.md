@@ -2,7 +2,9 @@
 
 Below is a demonstration code for PermaDAO financial settlement:
 
-Finance example
+## Example
+
+### Finance
 
 ```golang
 package main
@@ -35,6 +37,27 @@ func main() {
 	// dao.PayAll()
 	// dao.Pay("caac7a1aefcc4ed0b02b8adbc106f021")
 }
+```
 
+### Achievement
 
+```golang
+
+import (
+	"fmt"
+
+	"github.com/permadao/dnotion/achievement"
+	"github.com/permadao/dnotion/config"
+	"github.com/permadao/dnotion/db"
+)
+
+func main() {
+	config := config.New("../config.toml")
+	db := db.New(config)
+	ach := achievement.New(config, db)
+
+	totalAmount, rank, _ := ach.StatWeeklyFinances("a815dcd96395424a93d9854b4418ab03", "2023-10-27")
+	fmt.Println(totalAmount, rank)
+	// ach.GenAchievements("2023-10-27")
+}
 ```

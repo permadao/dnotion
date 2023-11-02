@@ -2,34 +2,31 @@ package db
 
 import (
 	"github.com/dstotijn/go-notion"
-	"github.com/everFinance/go-everpay/account"
+	"github.com/permadao/dnotion/db/schema"
 )
 
-// TODO: need refactor to contractor schema
-func (d *DB) GetAllContributors() (uidToNid, nidToWallet map[string]string) {
-	uidToNid = map[string]string{}
-	nidToWallet = map[string]string{}
-
-	pages, _ := d.GetAllPagesFromDB(d.ContributorsDB, nil)
-	for _, page := range pages {
-		p := page.Properties.(notion.DatabasePageProperties)
-		people := p["Notion"].People
-		if len(people) == 0 {
-			continue
-		}
-		uid := people[0].BaseUser.ID
-		uidToNid[uid] = page.ID
-
-		if len(p["Wallet"].RichText) == 0 {
-			continue
-		}
-		wallet := p["Wallet"].RichText[0].PlainText
-		if _, _, err := account.IDCheck(wallet); err != nil {
-			continue
-		}
-
-		nidToWallet[page.ID] = wallet
+func (d *DB) GetAllContributors() ([]schema.ContributorData, error) {
+	pages, err := d.GetAllPagesFromDB(d.ContributorsDB, nil)
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	contributorDatas := []schema.ContributorData{}
+	for _, page := range pages {
+		contributorData := NewContributorDataFromPage(page)
+		contributorDatas = append(contributorDatas, *contributorData)
+	}
+
+	return contributorDatas, nil
+}
+
+func NewContributorDataFromPage(page notion.Page) *schema.ContributorData {
+	props := page.Properties.(notion.DatabasePageProperties)
+	return NewContributorDataFromProps(page.ID, props)
+}
+
+func NewContributorDataFromProps(nid string, props notion.DatabasePageProperties) *schema.ContributorData {
+	contributorsData := &schema.ContributorData{}
+	contributorsData.DeserializePropertys(nid, props)
+	return contributorsData
 }
