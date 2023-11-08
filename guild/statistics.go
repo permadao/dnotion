@@ -11,7 +11,7 @@ import (
 // StatFinance for:
 // - totalAmount
 // - rankOfContributor
-func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, rankOfContributor []schema.Contributor, err error) {
+func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
@@ -28,11 +28,11 @@ func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, rankO
 		return
 	}
 
-	totalAmount, rankOfContributor = g.statFinance(targetToken, fins)
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
 	return
 }
 
-func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount float64, rankOfContributor []schema.Contributor, err error) {
+func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	date, err := notion.ParseDateTime(dateStr)
 	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
@@ -58,13 +58,13 @@ func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount
 		return
 	}
 
-	totalAmount, rankOfContributor = g.statFinance(targetToken, fins)
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
 	return
 }
 
-func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, rankOfContributor []schema.Contributor) {
+func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
 	// stat
-	contributors := map[string]float64{}
+	contributors = map[string]float64{}
 	for _, fin := range fins {
 		if fin.TargetToken != targetToken {
 			continue

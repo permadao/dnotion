@@ -42,8 +42,18 @@ func (g *Guild) initContributors() {
 
 func (g *Guild) GenGuilds(targetToken, date string) {
 	for guildName, info := range schema.Guilds {
-		totalAmount, rankOfContributor, _ := g.StatWeeklyFinance(targetToken, info.FinNID, date)
+		totalAmount, contributors, rankOfContributor, _ := g.StatWeeklyFinance(targetToken, info.FinNID, date)
+		allTotalAmount, allContributors, allRankOfContributor, _ := g.StatFinance(targetToken, info.FinNID)
 
+		// stat
+		news := float64(0)
+		for name, _ := range contributors {
+			if _, ok := allContributors[name]; !ok {
+				news++
+			}
+		}
+
+		// achievements
 		tags := []string{}
 		if a := AGuildActiviy(len(rankOfContributor)); a != "" {
 			tags = append(tags, a)
@@ -55,12 +65,17 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 		}
 
 		guild := dbSchema.GuildData{
-			Name: guildName,
-			Link: info.NID,
-			Tags: tags,
-			Info: info.Info,
-			Date: date,
-			Rank: info.Rank,
+			Name:               guildName,
+			Info:               info.Info,
+			Link:               info.NID,
+			Tags:               tags,
+			TotalContributors:  float64(len(allRankOfContributor)),
+			WeeklyContributors: float64(len(rankOfContributor)),
+			NewContributors:    news,
+			TotalIncentive:     allTotalAmount,
+			WeeklyIncentive:    totalAmount,
+			Date:               date,
+			Rank:               info.Rank,
 		}
 		if err := g.db.CreatePage(g.db.GuildDB, &guild); err != nil {
 			fmt.Println(err)
