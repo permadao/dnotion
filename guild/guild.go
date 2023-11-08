@@ -40,9 +40,9 @@ func (g *Guild) initContributors() {
 	}
 }
 
-func (g *Guild) GenGuilds(date string) {
+func (g *Guild) GenGuilds(targetToken, date string) {
 	for guildName, info := range schema.Guilds {
-		totalAmount, rankOfContributor, _ := g.StatWeeklyFinances(info.FinNID, date)
+		totalAmount, rankOfContributor, _ := g.StatWeeklyFinance(targetToken, info.FinNID, date)
 
 		tags := []string{}
 		if a := AGuildActiviy(len(rankOfContributor)); a != "" {
