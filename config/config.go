@@ -24,7 +24,7 @@ type Config struct {
 		// dbs
 		DBSecret       string   `mapstructure:"db_secret"`
 		ContributorsDB string   `mapstructure:"db_contributors"`
-		AchievementDB  string   `mapstructure:"db_achievement"`
+		GuildDB        string   `mapstructure:"db_guild"`
 		TaskDBs        []string `mapstructure:"task_dbs"`
 		WorkloadDBs    []string `mapstructure:"workload_dbs"`
 		FinDBs         []string `mapstructure:"finance_dbs"`
