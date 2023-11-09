@@ -8,7 +8,7 @@ import (
 	"github.com/dstotijn/go-notion"
 )
 
-func (d *DB) GetPageFromDBByID(nid, id string) (*notion.Page, error) {
+func (d *DB) GetPageByID(nid, id string) (*notion.Page, error) {
 	res, err := d.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Filter: &notion.DatabaseQueryFilter{
 			Property: "ID",
@@ -30,7 +30,7 @@ func (d *DB) GetPageFromDBByID(nid, id string) (*notion.Page, error) {
 	return &res.Results[0], nil
 }
 
-func (d *DB) GetLastPageFromDB(nid string) (page notion.Page, err error) {
+func (d *DB) GetLastPage(nid string) (page notion.Page, err error) {
 	res, err := d.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Sorts: []notion.DatabaseQuerySort{
 			notion.DatabaseQuerySort{
@@ -53,8 +53,8 @@ func (d *DB) GetLastPageFromDB(nid string) (page notion.Page, err error) {
 	return res.Results[0], nil
 }
 
-func (d *DB) GetLastIDFromDB(nid string) (id int, err error) {
-	page, err := d.GetLastPageFromDB(nid)
+func (d *DB) GetLastID(nid string) (id int, err error) {
+	page, err := d.GetLastPage(nid)
 	if err != nil {
 		return 0, err
 	}
@@ -73,7 +73,7 @@ func (d *DB) GetLastIDFromDB(nid string) (id int, err error) {
 	return
 }
 
-func (d *DB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page, err error) {
+func (d *DB) GetPages(nid string, filter *notion.DatabaseQueryFilter) (pages []notion.Page, err error) {
 	hasMore := true
 	nextCursor := ""
 
@@ -106,8 +106,8 @@ func (d *DB) GetAllPagesFromDB(nid string, filter *notion.DatabaseQueryFilter) (
 	return
 }
 
-func (d *DB) GetCountFromDB(nid string) (int, error) {
-	pages, err := d.GetAllPagesFromDB(nid, nil)
+func (d *DB) GetCount(nid string) (int, error) {
+	pages, err := d.GetPages(nid, nil)
 	if err != nil {
 		return 0, err
 	}

@@ -25,14 +25,14 @@ func (f *Finance) UpdateAllWorkToFin() (errlogs []string) {
 
 func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 	// get last Page id
-	wPageID, err := f.db.GetLastIDFromDB(workNid)
+	wPageID, err := f.db.GetLastID(workNid)
 	if err != nil {
 		msg := fmt.Sprintf("get last id from page failed:%s, workload nid: %s", err.Error(), workNid)
 		log.Error(msg)
 		errlogs = append(errlogs, msg)
 		return
 	}
-	fPageID, err := f.db.GetLastIDFromDB(finNid)
+	fPageID, err := f.db.GetLastID(finNid)
 	if err != nil {
 		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), finNid)
 		log.Error(msg)
@@ -45,7 +45,7 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 		fPageID++
 
 		fPageIDStr := fmt.Sprintf("%d", fPageID)
-		wpage, err := f.db.GetPageFromDBByID(workNid, fPageIDStr)
+		wpage, err := f.db.GetPageByID(workNid, fPageIDStr)
 		if err != nil {
 			msg := fmt.Sprintf("error getting page from workload DB, wid:%s fpid:%s, err:%s", workNid, fPageIDStr, err)
 			log.Error(msg)

@@ -12,7 +12,7 @@ import (
 // - totalAmount
 // - rankOfContributor
 func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
-	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -34,7 +34,7 @@ func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contr
 
 func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	date, err := notion.ParseDateTime(dateStr)
-	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",

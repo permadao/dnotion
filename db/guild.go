@@ -5,19 +5,19 @@ import (
 	"github.com/permadao/dnotion/db/schema"
 )
 
-func (d *DB) GetAllGuilds() ([]schema.GuildData, error) {
-	pages, err := d.GetAllPagesFromDB(d.GuildDB, nil)
+func (d *DB) GetGuilds(filter *notion.DatabaseQueryFilter) ([]schema.GuildData, error) {
+	pages, err := d.GetPages(d.GuildDB, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	achiementDatas := []schema.GuildData{}
+	guilds := []schema.GuildData{}
 	for _, page := range pages {
-		achiementData := NewGuildDataFromPage(page)
-		achiementDatas = append(achiementDatas, *achiementData)
+		guild := NewGuildDataFromPage(page)
+		guilds = append(guilds, *guild)
 	}
 
-	return achiementDatas, nil
+	return guilds, nil
 }
 
 func NewGuildDataFromPage(page notion.Page) *schema.GuildData {
@@ -26,7 +26,7 @@ func NewGuildDataFromPage(page notion.Page) *schema.GuildData {
 }
 
 func NewGuildDataFromProps(nid string, props notion.DatabasePageProperties) *schema.GuildData {
-	contributorsData := &schema.GuildData{}
-	contributorsData.DeserializePropertys(nid, props)
-	return contributorsData
+	guild := &schema.GuildData{}
+	guild.DeserializePropertys(nid, props)
+	return guild
 }

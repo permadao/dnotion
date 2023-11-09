@@ -28,7 +28,7 @@ func New(conf *config.Config, db *db.DB) *Guild {
 }
 
 func (g *Guild) initContributors() {
-	contributors, err := g.db.GetAllContributors()
+	contributors, err := g.db.GetContributors(nil)
 	if err != nil {
 		panic(err)
 	}

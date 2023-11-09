@@ -45,7 +45,7 @@ func New(conf *config.Config, db *db.DB) *Finance {
 }
 
 func (f *Finance) initContributors() {
-	contributors, err := f.db.GetAllContributors()
+	contributors, err := f.db.GetContributors(nil)
 	if err != nil {
 		panic(err)
 	}

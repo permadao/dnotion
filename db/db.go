@@ -16,6 +16,7 @@ type DB struct {
 	FinanceDBs     []string // notion id
 	ContributorsDB string   // notion id
 	GuildDB        string   // notion id
+	ContentStatDB  string   // notion id
 }
 
 func New(conf *config.Config) *DB {
@@ -28,5 +29,6 @@ func New(conf *config.Config) *DB {
 		FinanceDBs:     conf.NotionDB.FinDBs,
 		ContributorsDB: conf.NotionDB.ContributorsDB,
 		GuildDB:        conf.NotionDB.GuildDB,
+		ContentStatDB:  conf.NotionDB.ContentStatDB,
 	}
 }
