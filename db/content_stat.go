@@ -5,8 +5,8 @@ import (
 	"github.com/permadao/dnotion/db/schema"
 )
 
-func (d *DB) GetContentStats(nid string, filter *notion.DatabaseQueryFilter) ([]schema.ConentStatData, error) {
-	pages, err := d.GetPages(nid, filter)
+func (d *DB) GetContentStats(filter *notion.DatabaseQueryFilter) ([]schema.ConentStatData, error) {
+	pages, err := d.GetPages(d.ContentStatDB, filter)
 	if err != nil {
 		return nil, err
 	}
