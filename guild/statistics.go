@@ -1,22 +1,22 @@
-package achievement
+package guild
 
 import (
 	"sort"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/permadao/dnotion/achievement/schema"
+	"github.com/permadao/dnotion/guild/schema"
 )
 
 // StatWeeklyFinance Statistics for:
 // - totalAmount
 // - rankOfContributor
-func (a *Achievement) StatWeeklyFinances(nid string, dateStr string) (
+func (g *Guild) StatWeeklyFinances(nid string, dateStr string) (
 	totalAmount float64, rankOfContributor []schema.Contributor,
 	err error) {
 
 	date, err := notion.ParseDateTime(dateStr)
 
-	fins, err := a.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -45,7 +45,7 @@ func (a *Achievement) StatWeeklyFinances(nid string, dateStr string) (
 	for _, fin := range fins {
 		totalAmount += fin.Amount
 
-		name, ok := a.nidToName[fin.Contributor]
+		name, ok := g.nidToName[fin.Contributor]
 		if !ok {
 			continue
 		}
