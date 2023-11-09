@@ -6,6 +6,7 @@ import (
 
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/db"
+	"github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/utils"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,13 +26,13 @@ func (f *Finance) PayAll() (errlogs []string) {
 
 func (f *Finance) Pay(fnid string) (errs []string) {
 	// get Status is In progress
-	pages, err := f.db.GetAllPagesFromDB(fnid, &notion.DatabaseQueryFilter{
+	pages, err := f.db.GetPages(fnid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Status: &notion.StatusDatabaseQueryFilter{
-						Equals: db.StatusInProgress,
+						Equals: schema.StatusInProgress,
 					},
 				},
 			},
@@ -62,7 +63,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 		}
 
 		// update to done
-		finData.Status = db.StatusDone
+		finData.Status = schema.StatusDone
 		if err := f.db.UpdatePage(finData); err != nil {
 			msg := fmt.Sprintf("Update nid/id: %v/%v to `done` failed. %v", fnid, page.ID, err)
 			log.Error(msg)
@@ -80,7 +81,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 			log.Error(msg)
 			errs = append(errs, msg)
 			// rollback
-			finData.Status = db.StatusInProgress
+			finData.Status = schema.StatusInProgress
 			if err := f.db.UpdatePage(finData); err != nil {
 				msg := fmt.Sprintf("rollback nid/id: %v/%v to `In progress` failed. %v", fnid, page.ID, err)
 				log.Error(msg)

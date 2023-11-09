@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/db/schema"
 	log "github.com/sirupsen/logrus"
 )
@@ -35,13 +34,13 @@ func (f *Finance) UpdateFinToProgress(
 	log.Info("update fin to progress, fin_nid: ", finNid)
 
 	// get Status is Not started & Workload Status is Acctual txs
-	pages, err := f.db.GetAllPagesFromDB(finNid, &notion.DatabaseQueryFilter{
+	pages, err := f.db.GetPages(finNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Status: &notion.StatusDatabaseQueryFilter{
-						Equals: db.StatusNotStarted,
+						Equals: schema.StatusNotStarted,
 					},
 				},
 			},
@@ -51,7 +50,7 @@ func (f *Finance) UpdateFinToProgress(
 					Rollup: &notion.RollupDatabaseQueryFilter{
 						Any: &notion.DatabaseQueryPropertyFilter{
 							Status: &notion.StatusDatabaseQueryFilter{
-								Equals: db.StatusAccrual,
+								Equals: schema.StatusAccrual,
 							},
 						},
 					},
@@ -73,7 +72,7 @@ func (f *Finance) UpdateFinToProgress(
 			ActualPrice: actualPrice,
 			TargetToken: targetToken,
 			TargetPrice: targetPrice,
-			Status:      db.StatusInProgress,
+			Status:      schema.StatusInProgress,
 			PaymentDate: paymentDateStr,
 		}
 		if err := f.db.UpdatePage(&finData); err != nil {

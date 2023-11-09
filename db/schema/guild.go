@@ -37,6 +37,7 @@ func (a *GuildData) DeserializePropertys(nid string, props notion.DatabasePagePr
 		for i, tag := range props["Tags"].MultiSelect {
 			tags[i] = tag.Name
 		}
+		a.Tags = tags
 	}
 	if props["Total Contributors"].Number != nil {
 		a.TotalContributors = *props["Total Contributors"].Number

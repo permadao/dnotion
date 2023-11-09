@@ -28,7 +28,7 @@ func New(conf *config.Config, db *db.DB) *Guild {
 }
 
 func (g *Guild) initContributors() {
-	contributors, err := g.db.GetAllContributors()
+	contributors, err := g.db.GetContributors(nil)
 	if err != nil {
 		panic(err)
 	}
@@ -41,14 +41,17 @@ func (g *Guild) initContributors() {
 }
 
 func (g *Guild) GenGuilds(targetToken, date string) {
-	for guildName, info := range schema.Guilds {
-		totalAmount, contributors, rankOfContributor, _ := g.StatWeeklyFinance(targetToken, info.FinNID, date)
-		allTotalAmount, allContributors, allRankOfContributor, _ := g.StatFinance(targetToken, info.FinNID)
+	// content stat
+	hits, frontPages, _ := g.StatContent(date)
 
-		// stat
+	for guildName, info := range schema.Guilds {
+		// guild stat
+		totalAmount, contributors, rankOfContributor, _ := g.StatWeeklyFinance(targetToken, info.FinNID, date)
+		_, beforeContributors, _, _ := g.StatBeforeFinance(targetToken, info.FinNID, date)
+		allTotalAmount, _, allRankOfContributor, _ := g.StatFinance(targetToken, info.FinNID)
 		news := float64(0)
 		for name, _ := range contributors {
-			if _, ok := allContributors[name]; !ok {
+			if _, ok := beforeContributors[name]; !ok {
 				news++
 			}
 		}
@@ -62,6 +65,12 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 			if a := AFairDistribution(rankOfContributor[0].Amount / totalAmount); a != "" {
 				tags = append(tags, a)
 			}
+		}
+		if a := AReadership(hits); a != "" && (guildName == "内容公会 - 投稿" || guildName == "品宣公会") {
+			tags = append(tags, a)
+		}
+		if a := AMediaPicks(frontPages); a != "" && (guildName == "内容公会 - 投稿" || guildName == "品宣公会") {
+			tags = append(tags, a)
 		}
 
 		guild := dbSchema.GuildData{

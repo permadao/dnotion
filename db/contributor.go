@@ -5,8 +5,8 @@ import (
 	"github.com/permadao/dnotion/db/schema"
 )
 
-func (d *DB) GetAllContributors() ([]schema.ContributorData, error) {
-	pages, err := d.GetAllPagesFromDB(d.ContributorsDB, nil)
+func (d *DB) GetContributors(filter *notion.DatabaseQueryFilter) ([]schema.ContributorData, error) {
+	pages, err := d.GetPages(d.ContributorsDB, filter)
 	if err != nil {
 		return nil, err
 	}

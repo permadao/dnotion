@@ -5,8 +5,8 @@ import (
 	"github.com/permadao/dnotion/db/schema"
 )
 
-func (d *DB) GetFinancesByNID(nid string, filter *notion.DatabaseQueryFilter) ([]schema.FinData, error) {
-	pages, err := d.GetAllPagesFromDB(nid, filter)
+func (d *DB) GetFinances(nid string, filter *notion.DatabaseQueryFilter) ([]schema.FinData, error) {
+	pages, err := d.GetPages(nid, filter)
 	if err != nil {
 		return nil, err
 	}

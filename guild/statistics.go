@@ -8,11 +8,70 @@ import (
 	"github.com/permadao/dnotion/guild/schema"
 )
 
+// StatContent for:
+//   - hits
+//     map[int]int(key: number of hits, value: number of articles)
+//   - frontPages
+//     number of articles
+func (g *Guild) StatContent(dateStr string) (hits map[int]int, frontPages int, err error) {
+	end, err := notion.ParseDateTime(dateStr)
+	if err != nil {
+		return
+	}
+	start := end.AddDate(0, 0, -7)
+
+	datas, err := g.db.GetContentStats(&notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Count Time",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Before: &end.Time,
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Count Time",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						After: &start,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	// stat
+	hits = map[int]int{
+		500:  0,
+		1000: 0,
+		5000: 0,
+	}
+	for _, data := range datas {
+		switch true {
+		case data.Hits >= 5000:
+			hits[5000]++
+		case data.Hits >= 1000:
+			hits[1000]++
+		case data.Hits >= 500:
+			hits[500]++
+		}
+
+		if len(data.FrontPage) >= 3 {
+			frontPages++
+		}
+	}
+	return
+}
+
 // StatFinance for:
 // - totalAmount
 // - rankOfContributor
 func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
-	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -34,7 +93,11 @@ func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contr
 
 func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	date, err := notion.ParseDateTime(dateStr)
-	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+	if err != nil {
+		return
+	}
+
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
 				Property: "Status",
@@ -49,6 +112,41 @@ func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Date: &notion.DatePropertyFilter{
 						Equals: &date.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
+	return
+}
+
+func (g *Guild) StatBeforeFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+	date, err := notion.ParseDateTime(dateStr)
+	if err != nil {
+		return
+	}
+	end := date.AddDate(0, 0, -3)
+
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Status: &notion.StatusDatabaseQueryFilter{
+						Equals: "Done",
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Before: &end,
 					},
 				},
 			},

@@ -42,22 +42,24 @@ func main() {
 ### Achievement
 
 ```golang
+package main
 
 import (
 	"fmt"
 
-	"github.com/permadao/dnotion/achievement"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
+	"github.com/permadao/dnotion/guild"
 )
 
 func main() {
-	config := config.New("../config.toml")
+	config := config.New("./config.toml")
 	db := db.New(config)
-	ach := achievement.New(config, db)
+	g := guild.New(config, db)
 
-	totalAmount, rank, _ := ach.StatWeeklyFinances("a815dcd96395424a93d9854b4418ab03", "2023-10-27")
-	fmt.Println(totalAmount, rank)
-	// ach.GenAchievements("2023-10-27")
+	totalAmount, contributors, rank, _ := g.StatFinance("AR", "a815dcd96395424a93d9854b4418ab03")
+	fmt.Println(totalAmount, contributors, rank)
+	// g.GenGuilds("AR", "2023-10-27")
+	// g.GenGuilds("AR", "2023-11-03")
 }
 ```
