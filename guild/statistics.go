@@ -4,18 +4,36 @@ import (
 	"sort"
 
 	"github.com/dstotijn/go-notion"
+	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 )
 
-// StatWeeklyFinance Statistics for:
+// StatFinance for:
 // - totalAmount
 // - rankOfContributor
-func (g *Guild) StatWeeklyFinances(nid string, dateStr string) (
-	totalAmount float64, rankOfContributor []schema.Contributor,
-	err error) {
+func (g *Guild) StatFinance(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Status: &notion.StatusDatabaseQueryFilter{
+						Equals: "Done",
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
 
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
+	return
+}
+
+func (g *Guild) StatWeeklyFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	date, err := notion.ParseDateTime(dateStr)
-
 	fins, err := g.db.GetFinancesByNID(nid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			notion.DatabaseQueryFilter{
@@ -40,19 +58,27 @@ func (g *Guild) StatWeeklyFinances(nid string, dateStr string) (
 		return
 	}
 
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
+	return
+}
+
+func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
 	// stat
-	contributors := map[string]float64{}
+	contributors = map[string]float64{}
 	for _, fin := range fins {
-		totalAmount += fin.Amount
+		if fin.TargetToken != targetToken {
+			continue
+		}
+		totalAmount += fin.TargetAmount
 
 		name, ok := g.nidToName[fin.Contributor]
 		if !ok {
 			continue
 		}
 		if c, ok := contributors[name]; ok {
-			contributors[name] = c + fin.Amount
+			contributors[name] = c + fin.TargetAmount
 		} else {
-			contributors[name] = fin.Amount
+			contributors[name] = fin.TargetAmount
 		}
 	}
 
