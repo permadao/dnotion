@@ -20,4 +20,10 @@ func TestF(t *testing.T) {
 	fmt.Println(fmt.Sprintf("总金额：%f", amount))
 	fmt.Println(json.Marshal(contributors))
 	fmt.Println(json.Marshal(contributor))
+
+	translator, err := d.GetTranslator("117afdd004fc4890a60d586e39910883", nil)
+	if err != nil {
+		fmt.Print(err)
+	}
+	fmt.Println(json.Marshal(translator))
 }
