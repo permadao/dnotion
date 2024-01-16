@@ -9,7 +9,7 @@ import (
 
 func (d *DB) UpdatePage(idb schema.IDB) error {
 	nid, props := idb.SerializePropertys()
-	_, err := d.DBClient.UpdatePage(context.Background(), nid, notion.UpdatePageParams{
+	_, err := d.DBWriteClient.UpdatePage(context.Background(), nid, notion.UpdatePageParams{
 		DatabasePageProperties: *props,
 	})
 	return err
@@ -17,7 +17,7 @@ func (d *DB) UpdatePage(idb schema.IDB) error {
 
 func (d *DB) CreatePage(parentID string, idb schema.IDB) error {
 	_, props := idb.SerializePropertys()
-	_, err := d.DBClient.CreatePage(context.Background(), notion.CreatePageParams{
+	_, err := d.DBWriteClient.CreatePage(context.Background(), notion.CreatePageParams{
 		ParentType:             notion.ParentTypeDatabase,
 		ParentID:               parentID,
 		DatabasePageProperties: props,

@@ -7,8 +7,8 @@ import (
 
 type DB struct {
 	// notion client
-	DBClient       *notion.Client
-	RedirectClient *notion.Client
+	DBReadClient  *notion.Client
+	DBWriteClient *notion.Client
 
 	// db nid
 	TaskDBs        []string // notion id
@@ -21,8 +21,8 @@ type DB struct {
 
 func New(conf *config.Config) *DB {
 	return &DB{
-		DBClient:       notion.NewClient(conf.NotionDB.DBSecret),
-		RedirectClient: notion.NewClient(conf.NotionDB.ClientSecret),
+		DBWriteClient: notion.NewClient(conf.NotionDB.ReadSecret),
+		DBReadClient:  notion.NewClient(conf.NotionDB.WriteSecret),
 
 		TaskDBs:        conf.NotionDB.TaskDBs,
 		WorkloadDBs:    conf.NotionDB.WorkloadDBs,
