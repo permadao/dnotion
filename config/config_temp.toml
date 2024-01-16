@@ -4,11 +4,9 @@ appname = "dnotion"
 [notiondb]
     base_url = "https://api.notion.com"
 	version = "2022-06-28"
-    # secret for get redirect info
-	client_secret = "<your client secret>" 
-    client_id = "<your client id>"
     # dbs
-    db_secret = "<notion db secret>" # secret for update dbs
+    read_secret = "<notion db secret>" # secret for query dbs
+    write_secret = "<notion db secret>" # secret for update dbs
     # contributors db
     db_contributors = "d808ed8b25d746beb267ad552b1d1bf5"
 	db_guild = "f4870fdcf4ab4469bfb60662b9b8321e"

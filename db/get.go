@@ -9,7 +9,7 @@ import (
 )
 
 func (d *DB) GetPageByID(nid, id string) (*notion.Page, error) {
-	res, err := d.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+	res, err := d.DBReadClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Filter: &notion.DatabaseQueryFilter{
 			Property: "ID",
 			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
@@ -31,7 +31,7 @@ func (d *DB) GetPageByID(nid, id string) (*notion.Page, error) {
 }
 
 func (d *DB) GetLastPage(nid string) (page notion.Page, err error) {
-	res, err := d.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+	res, err := d.DBReadClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 		Sorts: []notion.DatabaseQuerySort{
 			notion.DatabaseQuerySort{
 				Property:  "Sort ID",
@@ -79,7 +79,7 @@ func (d *DB) GetPages(nid string, filter *notion.DatabaseQueryFilter) (pages []n
 
 	for hasMore {
 		var res notion.DatabaseQueryResponse
-		res, err = d.DBClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
+		res, err = d.DBReadClient.QueryDatabase(context.Background(), nid, &notion.DatabaseQuery{
 			Filter: filter,
 			Sorts: []notion.DatabaseQuerySort{
 				notion.DatabaseQuerySort{
