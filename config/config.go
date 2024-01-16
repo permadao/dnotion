@@ -16,13 +16,12 @@ type Config struct {
 
 	// notion db
 	NotionDB struct {
-		ClientSecret string `mapstructure:"client_secret"`
-		ClientID     string `mapstructure:"client_id"`
-		BaseUrl      string `mapstructure:"base_url"`
-		Version      string `mapstructure:"version"`
+		ReadSecret  string `mapstructure:"read_secret"`
+		WriteSecret string `mapstructure:"write_secret"`
+		BaseUrl     string `mapstructure:"base_url"`
+		Version     string `mapstructure:"version"`
 
 		// dbs
-		DBSecret       string   `mapstructure:"db_secret"`
 		ContributorsDB string   `mapstructure:"db_contributors"`
 		GuildDB        string   `mapstructure:"db_guild"`
 		ContentStatDB  string   `mapstructure:"db_content_stat"`
