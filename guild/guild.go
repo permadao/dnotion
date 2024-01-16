@@ -13,14 +13,16 @@ type Guild struct {
 	db *db.DB
 
 	// contributors
-	nidToName map[string]string //  contributor data nid -> contributors name
+	nidToName   map[string]string //  contributor data nid -> contributors name
+	nidToUserID map[string]string
 }
 
 func New(conf *config.Config, db *db.DB) *Guild {
 	g := &Guild{
 		db: db,
 
-		nidToName: map[string]string{},
+		nidToName:   map[string]string{},
+		nidToUserID: map[string]string{},
 	}
 
 	g.initContributors()
@@ -36,6 +38,9 @@ func (g *Guild) initContributors() {
 	for _, c := range contributors {
 		if c.NotionName != "" {
 			g.nidToName[c.NID] = c.NotionName
+		}
+		if c.NotionID != "" {
+			g.nidToUserID[c.NID] = c.NotionID
 		}
 	}
 }
