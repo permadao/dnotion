@@ -13,14 +13,16 @@ type Guild struct {
 	db *db.DB
 
 	// contributors
-	nidToName map[string]string //  contributor data nid -> contributors name
+	nidToName   map[string]string //  contributor data nid -> contributors name
+	nidToUserID map[string]string
 }
 
 func New(conf *config.Config, db *db.DB) *Guild {
 	g := &Guild{
 		db: db,
 
-		nidToName: map[string]string{},
+		nidToName:   map[string]string{},
+		nidToUserID: map[string]string{},
 	}
 
 	g.initContributors()
@@ -36,6 +38,9 @@ func (g *Guild) initContributors() {
 	for _, c := range contributors {
 		if c.NotionName != "" {
 			g.nidToName[c.NID] = c.NotionName
+		}
+		if c.NotionID != "" {
+			g.nidToUserID[c.NID] = c.NotionID
 		}
 	}
 }
@@ -90,4 +95,28 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 			fmt.Println(err)
 		}
 	}
+}
+
+func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
+	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
+	if err != nil {
+		return
+	}
+	id, err := g.db.GetLastID(gradeNid)
+	if err != nil {
+		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), gradeNid)
+		fmt.Printf(msg)
+		return
+	}
+	grades := GRankToGrade(rankOfContributor, id)
+
+	for _, tr := range grades {
+		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
+			msg := "create page failed:" + err.Error()
+			fmt.Println(msg)
+			return
+		}
+	}
+
+	return
 }

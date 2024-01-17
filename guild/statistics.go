@@ -160,6 +160,52 @@ func (g *Guild) StatBeforeFinance(targetToken, nid, dateStr string) (totalAmount
 	return
 }
 
+func (g *Guild) StatBetweenFinance(targetToken, nid, startDate, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+	start, err := notion.ParseDateTime(startDate)
+	if err != nil {
+		return
+	}
+	end, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Status: &notion.StatusDatabaseQueryFilter{
+						Equals: "Done",
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &start.Time,
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrBefore: &end.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	totalAmount, contributors, rankOfContributor = g.statFinance(targetToken, fins)
+	return
+}
+
 func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
 	// stat
 	contributors = map[string]float64{}
