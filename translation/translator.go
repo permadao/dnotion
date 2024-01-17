@@ -1,29 +1,21 @@
 package translation
 
-import "github.com/permadao/dnotion/db"
+import (
+	"github.com/permadao/dnotion/db"
+	trschema "github.com/permadao/dnotion/translation/schema"
+)
 
 type Translator struct {
 	db        *db.DB
 	nidToName map[string]string
 }
 
-type Tier struct {
-	level    Level
-	interval [2]int
-	val      [2]int
-}
-
-type Level struct {
-	name  string
-	color string
-}
-
 var (
-	SUPREME = Level{name: "Supreme-至尊", color: "purple"}
-	GLORY   = Level{name: "Glory-荣耀", color: "green"}
-	DIAMOND = Level{"Diamond-钻石", "green"}
-	GOLD    = Level{"Gold-黄金", "yellow"}
-	SILVER  = Level{"Silver-白银", "grey"}
+	SUPREME = trschema.Level{Name: "Supreme-至尊", Color: "purple"}
+	GLORY   = trschema.Level{Name: "Glory-荣耀", Color: "green"}
+	DIAMOND = trschema.Level{Name: "Diamond-钻石", Color: "green"}
+	GOLD    = trschema.Level{Name: "Gold-黄金", Color: "yellow"}
+	SILVER  = trschema.Level{Name: "Silver-白银", Color: "grey"}
 )
 
 func New(db *db.DB) *Translator {
@@ -48,28 +40,28 @@ func (t *Translator) initContributors() {
 	}
 }
 
-func (t *Translator) GetTierSlice() []Tier {
-	ts := []Tier{}
-	ts = append(ts, []Tier{
+func (t *Translator) GetTierSlice() []trschema.Tier {
+	ts := []trschema.Tier{}
+	ts = append(ts, []trschema.Tier{
 		{
-			level:    SUPREME,
-			interval: [2]int{0, 1},
+			Level:    SUPREME,
+			Interval: [2]int{0, 1},
 		},
 		{
-			level:    GLORY,
-			interval: [2]int{1, 2},
+			Level:    GLORY,
+			Interval: [2]int{1, 2},
 		},
 		{
-			level:    DIAMOND,
-			interval: [2]int{2, 4},
+			Level:    DIAMOND,
+			Interval: [2]int{2, 4},
 		},
 		{
-			level:    GOLD,
-			interval: [2]int{4, 7},
+			Level:    GOLD,
+			Interval: [2]int{4, 7},
 		},
 		{
-			level:    SILVER,
-			interval: [2]int{7, 10},
+			Level:    SILVER,
+			Interval: [2]int{7, 10},
 		},
 	}...)
 	return ts

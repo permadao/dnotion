@@ -6,6 +6,7 @@ import (
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"sort"
 	"time"
 )
@@ -18,43 +19,51 @@ func (t *Translator) Grade() (err error) {
 	if err != nil {
 		return
 	}
-	n := len(rankOfContributor)
-	gradedNum := 0
-	ts := t.GetTierSlice()
-	for i := 0; i < len(ts) && gradedNum < n; i++ {
-		l, r := ts[i].interval[0]*n/10, ts[i].interval[1]*n/10
-		ts[i].val = [2]int{l, r}
-		gradedNum += r - l
-	}
-	trSlice := []dbSchema.Translator{}
+
 	PageID, err := t.db.GetLastID(TRDB)
 	if err != nil {
 		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), TRDB)
 		log.Error(msg)
 		return
 	}
-	date := time.Now().Format("20060102")
-	for _, tier := range ts {
-		start, end := tier.val[0], tier.val[1]
-		for i := start; i < end; i++ {
-			PageID++
-			tr := dbSchema.Translator{
-				ID:          fmt.Sprintf("%d", PageID),
-				Contributor: rankOfContributor[i].Name,
-				Level:       tier.level.name,
-				Title:       "普通译员",
-				Date:        date,
-			}
-			trSlice = append(trSlice, tr)
-		}
+
+	translators, err := t.RankToGrade(rankOfContributor, PageID)
+	if err != nil {
+		return
 	}
 
 	//Update
-	for _, tr := range trSlice {
+	for _, tr := range translators {
 		if err = t.db.CreatePage(TRDB, &tr); err != nil {
 			msg := "create page failed:" + err.Error()
 			log.Error(msg)
 			return
+		}
+	}
+	return
+}
+
+func (t *Translator) RankToGrade(rankOfContributor []schema.Contributor, PageID int) (translators []dbSchema.Translator, err error) {
+	n := len(rankOfContributor)
+	gradedNum := 0
+	ts := t.GetTierSlice()
+	translators = make([]dbSchema.Translator, n)
+
+	date := time.Now().Format("20060102")
+	l, r := 0, 0
+	for i := 0; i < len(ts) && gradedNum < n; i++ {
+		gap := int(math.Ceil(float64((ts[i].Interval[1]-ts[i].Interval[0])*n) / 10.0))
+		l, r = r, r+gap
+		gradedNum += r - l
+		for j := l; j < r; j++ {
+			PageID++
+			translators[j] = dbSchema.Translator{
+				ID:          fmt.Sprintf("%d", PageID),
+				Contributor: rankOfContributor[j].Name,
+				Level:       ts[i].Level.Name,
+				Title:       "普通译员",
+				Date:        date,
+			}
 		}
 	}
 	return
