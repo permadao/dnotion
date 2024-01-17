@@ -102,8 +102,7 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	if err != nil {
 		return
 	}
-	//id, err := g.db.GetLastID(gradeNid)
-	id := 0
+	id, err := g.db.GetLastID(gradeNid)
 	if err != nil {
 		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), gradeNid)
 		fmt.Printf(msg)
