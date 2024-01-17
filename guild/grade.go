@@ -1,19 +1,27 @@
 package guild
 
 import (
+	"fmt"
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
+	"time"
 )
 
-func GRankToGrade(rankOfContributor []schema.Contributor) (translators []dbSchema.Translator) {
+func GRankToGrade(rankOfContributor []schema.Contributor, PageID int) (translators []dbSchema.Translator) {
 	n := len(rankOfContributor)
 	translators = make([]dbSchema.Translator, n)
 
+	date := time.Now().Format("2006-01-02")
+
 	for i, r := range rankOfContributor {
 		per := (float64(i) + 1) / float64(n)
+		PageID++
 		translators[i] = dbSchema.Translator{
+			ID:          fmt.Sprintf("%d", PageID),
 			Contributor: r.Name,
 			Level:       GTranslatorRank(per),
+			Title:       "普通译员",
+			Date:        date,
 		}
 	}
 	return

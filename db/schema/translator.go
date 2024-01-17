@@ -19,8 +19,8 @@ func (f *Translator) DeserializePropertys(nid string, props notion.DatabasePageP
 	if len(props["ID"].Title) > 0 {
 		f.ID = props["ID"].Title[0].Text.Content
 	}
-	if len(props["Contributor"].People) > 0 {
-		f.Contributor = props["Contributor"].People[0].BaseUser.ID
+	if len(props["Contributor"].RichText) > 0 {
+		f.Contributor = props["Contributor"].RichText[0].PlainText
 	}
 	if props["Level"].Select != nil {
 		f.Level = props["Level"].Select.Name
@@ -48,9 +48,11 @@ func (f *Translator) SerializePropertys() (nid string, nprops *notion.DatabasePa
 	}
 	if f.Contributor != "" {
 		props["Contributor"] = notion.DatabasePageProperty{
-			People: []notion.User{
+			RichText: []notion.RichText{
 				{
-					BaseUser: notion.BaseUser{ID: f.Contributor},
+					Text: &notion.Text{
+						Content: f.Contributor,
+					},
 				},
 			},
 		}
