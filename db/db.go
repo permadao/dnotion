@@ -21,8 +21,8 @@ type DB struct {
 
 func New(conf *config.Config) *DB {
 	return &DB{
-		DBWriteClient: notion.NewClient(conf.NotionDB.ReadSecret),
-		DBReadClient:  notion.NewClient(conf.NotionDB.WriteSecret),
+		DBWriteClient: notion.NewClient(conf.NotionDB.WriteSecret),
+		DBReadClient:  notion.NewClient(conf.NotionDB.ReadSecret),
 
 		TaskDBs:        conf.NotionDB.TaskDBs,
 		WorkloadDBs:    conf.NotionDB.WorkloadDBs,

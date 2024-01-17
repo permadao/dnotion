@@ -96,3 +96,22 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 		}
 	}
 }
+
+func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
+	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
+	if err != nil {
+		return
+	}
+
+	grades := GRankToGrade(rankOfContributor)
+	fmt.Printf("%+v\n", grades)
+
+	// for _, gr := range grades {
+	// 	gr.Date = endDate
+	// 	if err := g.db.CreatePage(gradeNid, &gr); err != nil {
+	// 		log.Error(err)
+	// 	}
+	// }
+
+	return nil
+}
