@@ -39,7 +39,7 @@ func main() {
 }
 ```
 
-### Achievement
+### Guild Achievement & Grade
 
 ```golang
 package main
@@ -57,9 +57,12 @@ func main() {
 	db := db.New(config)
 	g := guild.New(config, db)
 
+	// Achievement
 	totalAmount, contributors, rank, _ := g.StatFinance("AR", "a815dcd96395424a93d9854b4418ab03")
 	fmt.Println(totalAmount, contributors, rank)
-	// g.GenGuilds("AR", "2023-10-27")
-	// g.GenGuilds("AR", "2023-11-03")
+	g.GenGuilds("AR", "2023-10-27")
+
+	// Grade of Translation Guild
+	g.GenGrade("e8d79c55c0394cba83664f3e5737b0bd", "d8c270f68a8f44aaa6b24e17c927df2b", "2024-01-01", "2024-01-17")
 }
 ```

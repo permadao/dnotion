@@ -109,7 +109,6 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 		return
 	}
 	grades := GRankToGrade(rankOfContributor, id)
-	fmt.Printf("%+v\n", grades)
 
 	for _, tr := range grades {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
