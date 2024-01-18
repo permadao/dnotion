@@ -1,0 +1,62 @@
+package service
+
+import (
+	"time"
+
+	"github.com/go-co-op/gocron/v2"
+)
+
+func (s *Service) runJobs() {
+	var err error
+	s.scheduler, err = gocron.NewScheduler()
+	if err != nil {
+		panic(err)
+	}
+
+	// job list
+	s.scheduler.NewJob(
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(3, 0, 0))),
+		gocron.NewTask(s.genGuilds),
+	)
+	s.scheduler.NewJob(
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 0, 0))),
+		gocron.NewTask(s.genGrade),
+	)
+
+	s.scheduler.Start()
+}
+
+func (s *Service) genGuilds() {
+	date := GetPreviousDate(1)
+	log.Info("genGuild...", "date", date)
+
+	s.guild.GenGuilds("AR", date)
+
+	log.Info("genGuild done")
+}
+
+func (s *Service) genGrade() {
+	end := GetCurrentDate()
+	start := GetPreviousDate(4 * 7)
+	log.Info("genGrade...", "start", start, "end", end)
+
+	// translation guild grade
+	if err := s.guild.GenGrade("e8d79c55c0394cba83664f3e5737b0bd", "d8c270f68a8f44aaa6b24e17c927df2b", start, end); err != nil {
+		log.Error("genGrade failed", "err", err)
+	}
+
+	log.Info("genGrade done")
+}
+
+func GetCurrentDate() (date string) {
+	now := time.Now()
+	date = now.Format("2006-01-02")
+	return
+}
+
+func GetPreviousDate(days int) (date string) {
+	now := time.Now()
+	last := now.AddDate(0, 0, -days)
+	date = last.Format("2006-01-02")
+	return
+}
