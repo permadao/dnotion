@@ -5,8 +5,10 @@ import (
 	"github.com/everFinance/goether"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
-	log "github.com/sirupsen/logrus"
+	"github.com/permadao/dnotion/logger"
 )
+
+var log = logger.New("finance")
 
 type Finance struct {
 	// everpay sdk

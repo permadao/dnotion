@@ -6,7 +6,6 @@ import (
 
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/db/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 func (f *Finance) UpdateAllFinToProgress(
@@ -16,11 +15,11 @@ func (f *Finance) UpdateAllFinToProgress(
 ) (errs []string) {
 	for _, v := range f.db.FinanceDBs {
 		t := time.Now()
-		log.Info("Update Finance to progress, fid", v)
+		log.Info("Update Finance to progress", "fid", v)
 
 		e := f.UpdateFinToProgress(v, paymentDateStr, actualToken, actualPrice, targetToken, targetPrice)
 		errs = append(errs, e...)
-		log.Infof("Finance to progress, %s updated, since: %v\n\n", v, time.Since(t))
+		log.Info("Finance to progress", "updated", v, "since", time.Since(t))
 	}
 	return
 }
@@ -31,7 +30,7 @@ func (f *Finance) UpdateFinToProgress(
 	targetToken string, targetPrice float64,
 ) (errs []string) {
 	t := time.Now()
-	log.Info("update fin to progress, fin_nid: ", finNid)
+	log.Info("update fin to progress", "fin_nid", finNid)
 
 	// get Status is Not started & Workload Status is Acctual txs
 	pages, err := f.db.GetPages(finNid, &notion.DatabaseQueryFilter{
@@ -81,6 +80,6 @@ func (f *Finance) UpdateFinToProgress(
 			errs = append(errs, msg)
 		}
 	}
-	log.Infof("Update done, fin_nid: %s, time: %s", finNid, time.Since(t).String())
+	log.Info("Update done", "fin_nid", finNid, "time", time.Since(t))
 	return
 }

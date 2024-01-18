@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
-	log "github.com/sirupsen/logrus"
 )
 
 // check db count and return nid from failed dbs
@@ -18,7 +17,7 @@ func (f *Finance) CheckAllDbsCountAndID() (faileddbs []string) {
 func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 	for _, nid := range dbs {
 		t := time.Now()
-		log.Info("Checking count and id fnid: ", nid)
+		log.Info("Checking count and id fnid", "nid", nid)
 		count, err := f.db.GetCount(nid)
 		if err != nil {
 			msg := fmt.Sprintf("get count failed, nid: %s, err: %v\n", nid, err)
@@ -38,7 +37,7 @@ func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
 			log.Error(msg)
 			faileddbs = append(faileddbs, msg)
 		}
-		log.Infof("Check done, fin_nid: %s, time: %s", nid, time.Since(t).String())
+		log.Info("Check done", "fin_nid", nid, "time", time.Since(t))
 	}
 	return
 }
@@ -51,7 +50,7 @@ func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
 		errs := f.CheckWorkloadAndAmount(fnid, f.db.WorkloadDBs[i])
 		errLogs = append(errLogs, errs...)
 
-		log.Infof("Check done, fin_nid: %s, time: %s", fnid, time.Since(t).String())
+		log.Info("Check done", "fin_nid", fnid, "time", time.Since(t))
 	}
 	return
 }
