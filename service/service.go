@@ -1,36 +1,33 @@
 package service
 
 import (
-	"fmt"
-
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"github.com/go-co-op/gocron/v2"
+	"github.com/permadao/dnotion/guild"
+	"github.com/permadao/dnotion/logger"
 )
 
-func StartServe() {
-	log.Info("Starting server...")
+var log = logger.New("service")
 
-	// router
-	router := gin.Default()
-	router.Use(gin.Recovery())
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+type Service struct {
+	scheduler gocron.Scheduler
 
-	// routes
-	InitRouter(router)
+	guild *guild.Guild
+}
 
-	port := fmt.Sprintf(":%s", viper.GetString("service.port"))
-	err := router.Run(port)
-	if err != nil {
-		log.Fatal("run service error: ", err.Error())
+func New(g *guild.Guild) *Service {
+	return &Service{
+		guild: g,
 	}
+}
+
+func (s *Service) Run() {
+	log.Info("service running")
+
+	go s.runJobs()
+}
+
+func (s *Service) Close() {
+	s.scheduler.Shutdown()
+
+	log.Info("service closed")
 }

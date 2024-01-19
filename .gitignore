@@ -1,7 +1,6 @@
 go.sum
-
-example
-
-dnotion
-
 config.toml
+
+build
+example
+dnotion

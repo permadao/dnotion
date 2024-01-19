@@ -8,7 +8,6 @@ import (
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func (f *Finance) PayAll() (errlogs []string) {
@@ -19,7 +18,7 @@ func (f *Finance) PayAll() (errlogs []string) {
 		errs := f.Pay(v)
 		errlogs = append(errlogs, errs...)
 
-		log.Infof("Finance payment, %s updated, since: %v", v, time.Since(t))
+		log.Info("Finance payment", "updated", v, "since", time.Since(t))
 	}
 	return
 }

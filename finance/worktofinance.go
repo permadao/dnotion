@@ -7,18 +7,17 @@ import (
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/db/schema"
-	log "github.com/sirupsen/logrus"
 )
 
 func (f *Finance) UpdateAllWorkToFin() (errlogs []string) {
 	for i, v := range f.db.WorkloadDBs {
 		t := time.Now()
-		log.Info("Update workload to finance, wid", v)
+		log.Info("Update workload to finance", "wid", v)
 
 		errs := f.UpdateWorkToFin(v, f.db.FinanceDBs[i])
 		errlogs = append(errlogs, errs...)
 
-		log.Infof("Workload to Finance, %s/%s updated, since:%v\n\n", v, f.db.FinanceDBs[i], time.Since(t))
+		log.Info("Workload to Finance, %s/%s updated, since:%v\n\n", v, f.db.FinanceDBs[i], time.Since(t))
 	}
 	return
 }

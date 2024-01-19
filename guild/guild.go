@@ -1,13 +1,14 @@
 package guild
 
 import (
-	"fmt"
-
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
+	"github.com/permadao/dnotion/logger"
 )
+
+var log = logger.New("guild")
 
 type Guild struct {
 	db *db.DB
@@ -92,7 +93,7 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 			Rank:               info.Rank,
 		}
 		if err := g.db.CreatePage(g.db.GuildDB, &guild); err != nil {
-			fmt.Println(err)
+			log.Error("create guild failed", "err", err)
 		}
 	}
 }
@@ -104,16 +105,14 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	}
 	id, err := g.db.GetLastID(gradeNid)
 	if err != nil {
-		msg := fmt.Sprintf("get last id from page failed:%s, finance nid: %s", err.Error(), gradeNid)
-		fmt.Printf(msg)
+		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
 		return
 	}
 	grades := GRankToGrade(rankOfContributor, id)
 
 	for _, tr := range grades {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
-			msg := "create page failed:" + err.Error()
-			fmt.Println(msg)
+			log.Error("create grade page failed failed", "err", err)
 			return
 		}
 	}
