@@ -8,19 +8,19 @@ import (
 
 func (s *Service) runJobs() {
 	var err error
-	s.scheduler, err = gocron.NewScheduler()
+	s.scheduler, err = gocron.NewScheduler(gocron.WithLocation(time.UTC))
 	if err != nil {
 		panic(err)
 	}
 
 	// job list
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(3, 0, 0))),
-		gocron.NewTask(s.genGuilds),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 0, 0))),
+		gocron.NewTask(s.genGrade),
 	)
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 0, 0))),
-		gocron.NewTask(s.genGrade),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 30, 0))),
+		gocron.NewTask(s.genGuilds),
 	)
 
 	s.scheduler.Start()
