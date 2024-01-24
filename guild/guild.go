@@ -6,6 +6,7 @@ import (
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	"github.com/permadao/dnotion/logger"
+	"time"
 )
 
 var log = logger.New("guild")
@@ -120,8 +121,9 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	return
 }
 
-func (g *Guild) GenDevGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
-	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
+func (g *Guild) GenDevGrade(guidNid, gradeNid string) (err error) {
+	date := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
+	_, _, rankOfContributor, err := g.StatBeforeFinance("AR", guidNid, date)
 	if err != nil {
 		return
 	}
@@ -130,10 +132,21 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, startDate, endDate string) (err e
 		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
 		return
 	}
-	grades := GRankToGrade(rankOfContributor, id)
+	developers, err := g.db.GetDeveloper(gradeNid, nil)
+	if err != nil {
+		return
+	}
+	insert := GRankToGradeForDev(rankOfContributor, developers, id)
 
-	for _, tr := range grades {
+	for _, tr := range insert {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
+			log.Error("create grade page failed failed", "err", err)
+			return
+		}
+	}
+
+	for _, tr := range developers {
+		if err = g.db.UpdatePage(&tr); err != nil {
 			log.Error("create grade page failed failed", "err", err)
 			return
 		}
