@@ -27,6 +27,22 @@ func GRankToGrade(rankOfContributor []schema.Contributor, PageID int) (translato
 	return
 }
 
+func GRankToGradeForDev(rankOfContributor []schema.Contributor) (devMap map[string]dbSchema.Developer) {
+	n := len(rankOfContributor)
+	devMap = make(map[string]dbSchema.Developer, n)
+	date := time.Now().Format("2006-01-02")
+
+	for _, r := range rankOfContributor {
+		devMap[r.Name] = dbSchema.Developer{
+			Contributor: r.Name,
+			Level:       GDeveloperLevel(r.Amount),
+			Income:      r.Amount,
+			Date:        date,
+		}
+	}
+	return
+}
+
 func GTranslatorRank(per float64) (res string) {
 	switch true {
 	case per <= 0.1:
@@ -39,6 +55,16 @@ func GTranslatorRank(per float64) (res string) {
 		res = "Gold-黄金"
 	default:
 		res = "Silver-白银"
+	}
+	return
+}
+
+func GDeveloperLevel(income float64) (res string) {
+	switch true {
+	case income >= 500.0:
+		res = "高级开发者"
+	default:
+		res = "普通开发者"
 	}
 	return
 }

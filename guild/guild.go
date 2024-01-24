@@ -119,3 +119,25 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 
 	return
 }
+
+func (g *Guild) GenDevGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
+	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
+	if err != nil {
+		return
+	}
+	id, err := g.db.GetLastID(gradeNid)
+	if err != nil {
+		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
+		return
+	}
+	grades := GRankToGrade(rankOfContributor, id)
+
+	for _, tr := range grades {
+		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
+			log.Error("create grade page failed failed", "err", err)
+			return
+		}
+	}
+
+	return
+}
