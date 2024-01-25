@@ -2,6 +2,8 @@ package service
 
 import (
 	"time"
+
+	"github.com/go-co-op/gocron/v2"
 )
 
 func (s *Service) runJobs() {
