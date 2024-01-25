@@ -2,8 +2,6 @@ package service
 
 import (
 	"time"
-
-	"github.com/go-co-op/gocron/v2"
 )
 
 func (s *Service) runJobs() {
@@ -37,7 +35,7 @@ func (s *Service) genGuilds() {
 
 func (s *Service) genGrade() {
 	end := GetCurrentDate()
-	last := GetLastDate()
+	last := GetPreviousDate(7)
 	start := GetPreviousDate(4 * 7)
 	log.Info("genGrade...", "start", start, "end", end)
 
@@ -56,12 +54,6 @@ func (s *Service) genGrade() {
 
 func GetCurrentDate() (date string) {
 	now := time.Now()
-	date = now.Format("2006-01-02")
-	return
-}
-
-func GetLastDate() (date string) {
-	now := time.Now().AddDate(0, 0, -7)
 	date = now.Format("2006-01-02")
 	return
 }
