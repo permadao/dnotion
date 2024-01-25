@@ -1,6 +1,7 @@
 package guild
 
 import (
+	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
@@ -120,21 +121,45 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	return
 }
 
-func (g *Guild) GenDevGrade(guidNid, gradeNid, endDate string) (err error) {
-	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDate)
+func (g *Guild) GenDevGrade(guidNid, gradeNid, endDateStr string) (err error) {
+	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDateStr)
 	if err != nil {
 		return
 	}
+	endDate, err := notion.ParseDateTime(endDateStr)
+	if err != nil {
+		return
+	}
+	lastDate := endDate.AddDate(0, 0, -7)
 	id, err := g.db.GetLastID(gradeNid)
 	if err != nil {
 		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
 		return
 	}
-	developers, err := g.db.GetDeveloper(gradeNid, nil)
+	developers, err := g.db.GetDeveloper(gradeNid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &lastDate,
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Before: &endDate.Time,
+					},
+				},
+			},
+		},
+	})
 	if err != nil {
 		return
 	}
-	insert := GRankToGradeForDev(rankOfContributor, developers, id, endDate)
+	insert := GRankToGradeForDev(rankOfContributor, developers, id, endDateStr)
 
 	for _, tr := range insert {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {

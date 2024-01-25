@@ -37,23 +37,17 @@ func GRankToGradeForDev(rankOfContributor []schema.Contributor, developers []dbS
 	}
 	for _, r := range rankOfContributor {
 		PageID++
+		level := GDeveloperLevel(r.Amount)
 		if _, ok := coreDev[r.Name]; ok {
-			insert = append(insert, dbSchema.Developer{
-				ID:          fmt.Sprintf("%d", PageID),
-				Contributor: r.Name,
-				Level:       "核心开发者",
-				Income:      r.Amount,
-				Date:        endDate,
-			})
-		} else {
-			insert = append(insert, dbSchema.Developer{
-				ID:          fmt.Sprintf("%d", PageID),
-				Contributor: r.Name,
-				Level:       GDeveloperLevel(r.Amount),
-				Income:      r.Amount,
-				Date:        endDate,
-			})
+			level = "核心开发者"
 		}
+		insert = append(insert, dbSchema.Developer{
+			ID:          fmt.Sprintf("%d", PageID),
+			Contributor: r.Name,
+			Level:       level,
+			Income:      r.Amount,
+			Date:        endDate,
+		})
 	}
 	return
 }
