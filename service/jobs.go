@@ -45,6 +45,11 @@ func (s *Service) genGrade() {
 		log.Error("genGrade failed", "err", err)
 	}
 
+	// developer guild grade
+	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d"); err != nil {
+		log.Error("genDevGrade failed", "err", err)
+	}
+
 	log.Info("genGrade done")
 }
 
