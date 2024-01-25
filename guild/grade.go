@@ -27,28 +27,31 @@ func GRankToGrade(rankOfContributor []schema.Contributor, PageID int) (translato
 	return
 }
 
-func GRankToGradeForDev(rankOfContributor []schema.Contributor, developers []dbSchema.Developer, PageID int) (insert []dbSchema.Developer) {
+func GRankToGradeForDev(rankOfContributor []schema.Contributor, developers []dbSchema.Developer, PageID int, endDate string) (insert []dbSchema.Developer) {
 	n := len(developers)
-	date := time.Now().Format("2006-01-02")
-	devMap := make(map[string]*dbSchema.Developer, n)
+	coreDev := make(map[string]struct{}, n)
 	for i := 0; i < len(developers); i++ {
-		devMap[developers[i].Contributor] = &developers[i]
+		if developers[i].Level == "核心开发者" {
+			coreDev[developers[i].Contributor] = struct{}{}
+		}
 	}
 	for _, r := range rankOfContributor {
-		if d, ok := devMap[r.Name]; ok {
-			if d.Income < 500.0 && r.Amount >= 500.0 {
-				d.Date = date
-				d.Level = GDeveloperLevel(r.Amount)
-			}
-			d.Income = r.Amount
+		PageID++
+		if _, ok := coreDev[r.Name]; ok {
+			insert = append(insert, dbSchema.Developer{
+				ID:          fmt.Sprintf("%d", PageID),
+				Contributor: r.Name,
+				Level:       "核心开发者",
+				Income:      r.Amount,
+				Date:        endDate,
+			})
 		} else {
-			PageID++
 			insert = append(insert, dbSchema.Developer{
 				ID:          fmt.Sprintf("%d", PageID),
 				Contributor: r.Name,
 				Level:       GDeveloperLevel(r.Amount),
 				Income:      r.Amount,
-				Date:        date,
+				Date:        endDate,
 			})
 		}
 	}

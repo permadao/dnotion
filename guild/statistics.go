@@ -160,7 +160,7 @@ func (g *Guild) StatBeforeFinance(targetToken, nid, dateStr string) (totalAmount
 	return
 }
 
-func (g *Guild) StatBeforeDevFinance(targetToken, nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+func (g *Guild) StatBeforeFinanceByAmount(nid, dateStr string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
 	end, err := notion.ParseDateTime(dateStr)
 	if err != nil {
 		return
@@ -190,7 +190,7 @@ func (g *Guild) StatBeforeDevFinance(targetToken, nid, dateStr string) (totalAmo
 		return
 	}
 
-	totalAmount, contributors, rankOfContributor = g.statDevFinance(targetToken, fins)
+	totalAmount, contributors, rankOfContributor = g.statFinanceByAmount(fins)
 	return
 }
 
@@ -240,13 +240,10 @@ func (g *Guild) StatBetweenFinance(targetToken, nid, startDate, endDate string) 
 	return
 }
 
-func (g *Guild) statDevFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
+func (g *Guild) statFinanceByAmount(fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
 	// stat
 	contributors = map[string]float64{}
 	for _, fin := range fins {
-		if fin.TargetToken != targetToken {
-			continue
-		}
 		totalAmount += fin.Amount
 
 		name, ok := g.nidToName[fin.Contributor]
