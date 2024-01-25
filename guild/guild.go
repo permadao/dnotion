@@ -1,6 +1,7 @@
 package guild
 
 import (
+	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
@@ -113,6 +114,47 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	for _, tr := range grades {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
 			log.Error("create grade page failed failed", "err", err)
+			return
+		}
+	}
+
+	return
+}
+
+func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDate)
+	if err != nil {
+		return
+	}
+	lastD, err := notion.ParseDateTime(lastDate)
+	if err != nil {
+		return
+	}
+	id, err := g.db.GetLastID(gradeNid)
+	if err != nil {
+		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
+		return
+	}
+	developers, err := g.db.GetDeveloper(gradeNid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Equals: &lastD.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+	insert := GRankToGradeForDev(rankOfContributor, developers, id, endDate)
+
+	for _, tr := range insert {
+		if err = g.db.CreatePage(gradeNid, &tr); err != nil {
+			log.Error("create grade page failed", "err", err)
 			return
 		}
 	}

@@ -2,8 +2,6 @@ package service
 
 import (
 	"time"
-
-	"github.com/go-co-op/gocron/v2"
 )
 
 func (s *Service) runJobs() {
@@ -37,12 +35,18 @@ func (s *Service) genGuilds() {
 
 func (s *Service) genGrade() {
 	end := GetCurrentDate()
+	last := GetPreviousDate(7)
 	start := GetPreviousDate(4 * 7)
 	log.Info("genGrade...", "start", start, "end", end)
 
 	// translation guild grade
 	if err := s.guild.GenGrade("e8d79c55c0394cba83664f3e5737b0bd", "d8c270f68a8f44aaa6b24e17c927df2b", start, end); err != nil {
 		log.Error("genGrade failed", "err", err)
+	}
+
+	// developer guild grade
+	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d", last, end); err != nil {
+		log.Error("genDevGrade failed", "err", err)
 	}
 
 	log.Info("genGrade done")
