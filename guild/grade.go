@@ -31,8 +31,8 @@ func GRankToGradeForDev(rankOfContributor []schema.Contributor, developers []dbS
 	n := len(developers)
 	date := time.Now().Format("2006-01-02")
 	devMap := make(map[string]*dbSchema.Developer, n)
-	for _, d := range developers {
-		devMap[d.Contributor] = &d
+	for i := 0; i < len(developers); i++ {
+		devMap[developers[i].Contributor] = &developers[i]
 	}
 	for _, r := range rankOfContributor {
 		if d, ok := devMap[r.Name]; ok {

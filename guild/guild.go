@@ -123,7 +123,7 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 
 func (g *Guild) GenDevGrade(guidNid, gradeNid string) (err error) {
 	date := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
-	_, _, rankOfContributor, err := g.StatBeforeFinance("AR", guidNid, date)
+	_, _, rankOfContributor, err := g.StatBeforeDevFinance("AR", guidNid, date)
 	if err != nil {
 		return
 	}
