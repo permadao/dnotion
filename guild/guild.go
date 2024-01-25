@@ -121,16 +121,15 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	return
 }
 
-func (g *Guild) GenDevGrade(guidNid, gradeNid, endDateStr string) (err error) {
-	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDateStr)
+func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDate)
 	if err != nil {
 		return
 	}
-	endDate, err := notion.ParseDateTime(endDateStr)
+	lastD, err := notion.ParseDateTime(lastDate)
 	if err != nil {
 		return
 	}
-	lastDate := endDate.AddDate(0, 0, -7)
 	id, err := g.db.GetLastID(gradeNid)
 	if err != nil {
 		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
@@ -142,15 +141,7 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, endDateStr string) (err error) {
 				Property: "Date",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Date: &notion.DatePropertyFilter{
-						OnOrAfter: &lastDate,
-					},
-				},
-			},
-			notion.DatabaseQueryFilter{
-				Property: "Date",
-				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-					Date: &notion.DatePropertyFilter{
-						Before: &endDate.Time,
+						Equals: &lastD.Time,
 					},
 				},
 			},
@@ -159,7 +150,7 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, endDateStr string) (err error) {
 	if err != nil {
 		return
 	}
-	insert := GRankToGradeForDev(rankOfContributor, developers, id, endDateStr)
+	insert := GRankToGradeForDev(rankOfContributor, developers, id, endDate)
 
 	for _, tr := range insert {
 		if err = g.db.CreatePage(gradeNid, &tr); err != nil {

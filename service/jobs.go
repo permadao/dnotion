@@ -37,6 +37,7 @@ func (s *Service) genGuilds() {
 
 func (s *Service) genGrade() {
 	end := GetCurrentDate()
+	last := GetLastDate()
 	start := GetPreviousDate(4 * 7)
 	log.Info("genGrade...", "start", start, "end", end)
 
@@ -46,7 +47,7 @@ func (s *Service) genGrade() {
 	}
 
 	// developer guild grade
-	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d", end); err != nil {
+	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d", last, end); err != nil {
 		log.Error("genDevGrade failed", "err", err)
 	}
 
@@ -55,6 +56,12 @@ func (s *Service) genGrade() {
 
 func GetCurrentDate() (date string) {
 	now := time.Now()
+	date = now.Format("2006-01-02")
+	return
+}
+
+func GetLastDate() (date string) {
+	now := time.Now().AddDate(0, 0, -7)
 	date = now.Format("2006-01-02")
 	return
 }
