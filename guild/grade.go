@@ -38,9 +38,9 @@ func GRankToGradeForDev(rankOfContributor []schema.Contributor, developers []dbS
 		if d, ok := devMap[r.Name]; ok {
 			if d.Income < 500.0 && r.Amount >= 500.0 {
 				d.Date = date
+				d.Level = GDeveloperLevel(r.Amount)
 			}
 			d.Income = r.Amount
-			d.Level = GDeveloperLevel(r.Amount)
 		} else {
 			PageID++
 			insert = append(insert, dbSchema.Developer{
