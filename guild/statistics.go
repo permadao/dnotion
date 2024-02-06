@@ -190,7 +190,7 @@ func (g *Guild) StatBeforeFinanceByAmount(nid, dateStr string) (totalAmount floa
 		return
 	}
 
-	totalAmount, contributors, rankOfContributor = g.statFinanceByAmount(fins)
+	totalAmount, contributors, rankOfContributor = g.statFinance("", fins)
 	return
 }
 
@@ -240,58 +240,44 @@ func (g *Guild) StatBetweenFinance(targetToken, nid, startDate, endDate string) 
 	return
 }
 
-func (g *Guild) statFinanceByAmount(fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
-	// stat
-	contributors = map[string]float64{}
-	for _, fin := range fins {
-		totalAmount += fin.Amount
-
-		name, ok := g.nidToName[fin.Contributor]
-		if !ok {
-			continue
-		}
-		if c, ok := contributors[name]; ok {
-			contributors[name] = c + fin.Amount
-		} else {
-			contributors[name] = fin.Amount
-		}
-	}
-
-	// rank
-	for k, v := range contributors {
-		rankOfContributor = append(rankOfContributor, schema.Contributor{k, v})
-	}
-	sort.Slice(rankOfContributor, func(i, j int) bool {
-		return rankOfContributor[i].Amount > rankOfContributor[j].Amount
-	})
-
-	return
-}
-
+// if targetToken == "", stat fin.Amount
 func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
 	// stat
-	contributors = map[string]float64{}
+	aggrContributors := map[string]float64{} // contributors id -> sum of rewards
 	for _, fin := range fins {
-		if fin.TargetToken != targetToken {
+		switch targetToken {
+		case "":
+			totalAmount += fin.Amount
+		case fin.TargetToken:
+			totalAmount += fin.TargetAmount
+		default:
 			continue
 		}
-		totalAmount += fin.TargetAmount
 
-		name, ok := g.nidToName[fin.Contributor]
+		if fin.Contributor == "" {
+			continue
+		}
+		if c, ok := aggrContributors[fin.Contributor]; ok {
+			aggrContributors[fin.Contributor] = c + fin.TargetAmount
+		} else {
+			aggrContributors[fin.Contributor] = fin.TargetAmount
+		}
+	}
+
+	// gen contributors & rank
+	contributors = map[string]float64{}
+	for k, v := range aggrContributors {
+		name, ok := g.nidToName[k]
 		if !ok {
 			continue
 		}
-		if c, ok := contributors[name]; ok {
-			contributors[name] = c + fin.TargetAmount
-		} else {
-			contributors[name] = fin.TargetAmount
-		}
+		contributors[name] = v
+
+		wallet := g.nidToWallet[k]
+		rankOfContributor = append(rankOfContributor, schema.Contributor{name, v, wallet})
 	}
 
-	// rank
-	for k, v := range contributors {
-		rankOfContributor = append(rankOfContributor, schema.Contributor{k, v})
-	}
+	// sort and rank
 	sort.Slice(rankOfContributor, func(i, j int) bool {
 		return rankOfContributor[i].Amount > rankOfContributor[j].Amount
 	})
