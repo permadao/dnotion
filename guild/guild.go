@@ -16,7 +16,7 @@ type Guild struct {
 
 	// contributors
 	nidToName   map[string]string //  contributor data nid -> contributors name
-	nidToUserID map[string]string
+	nidToWallet map[string]string // contributor data nid -> contributors wallet
 }
 
 func New(conf *config.Config, db *db.DB) *Guild {
@@ -24,7 +24,7 @@ func New(conf *config.Config, db *db.DB) *Guild {
 		db: db,
 
 		nidToName:   map[string]string{},
-		nidToUserID: map[string]string{},
+		nidToWallet: map[string]string{},
 	}
 
 	g.initContributors()
@@ -41,8 +41,8 @@ func (g *Guild) initContributors() {
 		if c.NotionName != "" {
 			g.nidToName[c.NID] = c.NotionName
 		}
-		if c.NotionID != "" {
-			g.nidToUserID[c.NID] = c.NotionID
+		if c.Wallet != "" {
+			g.nidToWallet[c.NID] = c.Wallet
 		}
 	}
 }
