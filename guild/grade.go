@@ -77,3 +77,61 @@ func GDeveloperLevel(income float64) (res string) {
 	}
 	return
 }
+func GRankToGradeForNews(aggrContributorsFor15weeks map[string]float64,aggrContributorsForAllDay map[string]float64,news []dbSchema.News,PageID int,endDate string) (insert []dbSchema.News) {
+	n := len(news)
+	// fmt.Println(n)
+	for i := 0; i < n; i++ {
+		contributor := news[i].Executor
+		fmt.Println(news[i].ID)
+		// curRewards := news[i].CumulativeWorkload
+		// fmt.Println(curRewards)
+		// curRewardsOf15weeks := news[i].WorkloadOf15Weeds
+		// fmt.Println(curRewardsOf15weeks)
+		
+		reward,_:= aggrContributorsForAllDay[contributor]
+
+		rewardOf15weeks,_ := aggrContributorsFor15weeks[contributor]
+
+		PageID++
+		rank,rankCode :=  GDNewsLevel(rewardOf15weeks)
+		insert = append(insert, dbSchema.News{
+			NID:news[i].NID,
+			ID: news[i].ID,
+			// Executor: news[i].Executor,
+			// ExecutorWorkload: news[i].ExecutorWorkload,
+			Rank: rank,
+			WorkloadOf15Weeds: rewardOf15weeks,
+			RankCode: rankCode,
+			CumulativeWorkload: reward,
+			Date: endDate,
+		})
+	}
+	return
+}
+
+
+func GDNewsLevel(income float64) (res string,code string) {
+	switch true {
+	case income >= 1600.0:{
+		res = "氪石作者"
+		code = "Kryptonite"
+	}
+	case income >= 800.0:{
+		res = "钻石作者"
+		code = "Diamond"
+	}
+	case income >= 400.0:{
+		res = "黄金作者"
+		code = "Gold"
+	}
+	case income >= 200.0:{
+		res = "白银作者"
+		code = "Silver"
+	}
+	default:{
+			res = "普通作者"
+			code = "normal"
+		}
+	}
+	return
+}
