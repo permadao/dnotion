@@ -1,12 +1,14 @@
 package guild
 
 import (
+	"fmt"
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	"github.com/permadao/dnotion/logger"
+	"math"
 )
 
 var log = logger.New("guild")
@@ -160,4 +162,50 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 	}
 
 	return
+}
+
+func (g *Guild) GenPromotionSettlement(guidNid, outNid, lastDate, endDate string) (err error) {
+	//1 查询最新的输出表
+	endD, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+	ps, err := g.db.GetPromotionStat(guidNid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Equals: &endD.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil || len(ps) == 0 {
+		return
+	}
+	//2 统计输入表的数据
+	promotionPoints, err := g.db.GetPromotionPoints(ps[0].ID, nil)
+
+	fmt.Println(len(promotionPoints))
+	//3 输出
+	insert := CalculatePromotionRewards(promotionPoints)
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the reward of promotion's page failed", "err", err)
+			return
+		}
+	}
+	return
+}
+
+func CalculateReward(entry, promotions, entryW, pW float64) float64 {
+	//Constant
+	k := 1.0
+	return k*math.Pow(entry, entryW)/1 + math.Pow(entry/promotions, pW)
+}
+
+func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints) []dbSchema.PromotionSettlement {
+	return nil
 }
