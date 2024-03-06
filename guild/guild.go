@@ -200,12 +200,22 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, lastDate, endDate string
 	return
 }
 
-func CalculateReward(entry, promotions, entryW, pW float64) float64 {
+func CalculateRewardPool(entry, promotions, entryW, pW float64) float64 {
 	//Constant
 	k := 1.0
 	return k*math.Pow(entry, entryW)/1 + math.Pow(entry/promotions, pW)
 }
 
 func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints) []dbSchema.PromotionSettlement {
+	totalPoints := 0.0
+	contributor := map[string]float64{}
+	promotinNum := map[string]struct{}{}
+	for _, p := range promotionPoints {
+		totalPoints += p.BasePoints
+		contributor[p.Contributor] += p.BasePoints
+		if _, ok := promotinNum[p.Task]; !ok {
+			promotinNum[p.Task] = struct{}{}
+		}
+	}
 	return nil
 }

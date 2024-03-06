@@ -6,15 +6,17 @@ import (
 )
 
 type PromotionStat struct {
-	NID  string
-	ID   string
-	Date string
+	NID   string
+	ID    string
+	OutDB string
+	Date  string
 }
 
 type PromotionPoints struct {
 	NID         string
 	Contributor string
-	BasePoints  string
+	BasePoints  float64
+	Task        string
 }
 
 type PromotionSettlement struct {
@@ -31,6 +33,9 @@ func (p *PromotionStat) DeserializePropertys(nid string, props notion.DatabasePa
 	if len(props["ID"].Title) > 0 {
 		p.ID = props["ID"].Title[0].Text.Content
 	}
+	if len(props["Out DB"].Title) > 0 {
+		p.OutDB = props["Out DB"].Title[0].Text.Content
+	}
 	if props["Date"].Date != nil {
 		p.Date = props["Date"].Date.Start.Format("2006-01-02")
 	}
@@ -44,6 +49,17 @@ func (p *PromotionStat) SerializePropertys() (nid string, nprops *notion.Databas
 				{
 					Text: &notion.Text{
 						Content: p.ID,
+					},
+				},
+			},
+		}
+	}
+	if p.OutDB != "" {
+		props["Out DB"] = notion.DatabasePageProperty{
+			Title: []notion.RichText{
+				{
+					Text: &notion.Text{
+						Content: p.OutDB,
 					},
 				},
 			},
@@ -88,17 +104,17 @@ func (p *PromotionPoints) SerializePropertys() (nid string, nprops *notion.Datab
 			},
 		}
 	}
-	if p.BasePoints != "" {
-		props["BasePoints"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
-				{
-					Text: &notion.Text{
-						Content: p.BasePoints,
-					},
-				},
-			},
-		}
-	}
+	//if p.BasePoints != "" {
+	//	props["BasePoints"] = notion.DatabasePageProperty{
+	//		Title: []notion.RichText{
+	//			{
+	//				Text: &notion.Text{
+	//					Content: p.BasePoints,
+	//				},
+	//			},
+	//		},
+	//	}
+	//}
 	return p.NID, &props
 }
 func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.DatabasePageProperties) {

@@ -1,6 +1,7 @@
 package guild
 
 import (
+	"fmt"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	"testing"
@@ -28,5 +29,8 @@ func TestGuild_GenPromotionSettlement(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	g.GenPromotionSettlement("14debb08a4e8416e9b0de7ce46821506", "", "", "2024-03-05")
+	err := g.GenPromotionSettlement("14debb08a4e8416e9b0de7ce46821506", "", "", "2024-03-05")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
