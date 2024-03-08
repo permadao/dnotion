@@ -33,9 +33,6 @@ func (p *PromotionStat) DeserializePropertys(nid string, props notion.DatabasePa
 	if len(props["ID"].Title) > 0 {
 		p.ID = props["ID"].Title[0].Text.Content
 	}
-	if len(props["Out DB"].Title) > 0 {
-		p.OutDB = props["Out DB"].Title[0].Text.Content
-	}
 	if props["Date"].Date != nil {
 		p.Date = props["Date"].Date.Start.Format("2006-01-02")
 	}
@@ -49,17 +46,6 @@ func (p *PromotionStat) SerializePropertys() (nid string, nprops *notion.Databas
 				{
 					Text: &notion.Text{
 						Content: p.ID,
-					},
-				},
-			},
-		}
-	}
-	if p.OutDB != "" {
-		props["Out DB"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
-				{
-					Text: &notion.Text{
-						Content: p.OutDB,
 					},
 				},
 			},
@@ -86,8 +72,11 @@ func (p *PromotionPoints) DeserializePropertys(nid string, props notion.Database
 	if len(props["Contributor"].Title) > 0 {
 		p.Contributor = props["Contributor"].Title[0].Text.Content
 	}
-	if len(props["BasePoints"].Title) > 0 {
-		p.Contributor = props["BasePoints"].Title[0].Text.Content
+	if props["Base Points"].Rollup != nil {
+		p.BasePoints = *props["BasePoints"].Rollup.Number
+	}
+	if len(props["Task"].People) > 0 {
+		p.Task = props["Task"].Relation[0].ID
 	}
 }
 
@@ -104,17 +93,6 @@ func (p *PromotionPoints) SerializePropertys() (nid string, nprops *notion.Datab
 			},
 		}
 	}
-	//if p.BasePoints != "" {
-	//	props["BasePoints"] = notion.DatabasePageProperty{
-	//		Title: []notion.RichText{
-	//			{
-	//				Text: &notion.Text{
-	//					Content: p.BasePoints,
-	//				},
-	//			},
-	//		},
-	//	}
-	//}
 	return p.NID, &props
 }
 func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
