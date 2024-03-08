@@ -39,6 +39,8 @@ func (s *Service) genGrade() {
 	end := GetCurrentDate()
 	last := GetPreviousDate(7)
 	start := GetPreviousDate(4 * 7)
+	startDateOfNews := GetPreviousDate(15 * 7)
+
 	log.Info("genGrade...", "start", start, "end", end)
 
 	// translation guild grade
@@ -49,6 +51,11 @@ func (s *Service) genGrade() {
 	// developer guild grade
 	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d", last, end); err != nil {
 		log.Error("genDevGrade failed", "err", err)
+	}
+
+	// news guild grade
+	if err := s.guild.GenNewsGrade("ad2cf585b08843fea7cf40a682bc4529", "d5f9fc70910b45d4ab8811f37716637d", startDateOfNews, end); err != nil {
+		log.Error("genNewsGrade failed", "err", err)
 	}
 
 	log.Info("genGrade done")

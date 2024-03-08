@@ -284,3 +284,42 @@ func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalA
 
 	return
 }
+
+func (g *Guild) statNewsFinance( fins []dbSchema.NewsFinData,startDate string) (totalAmount float64, aggrContributorsFor15weeks map[string]float64, aggrContributorsForAllDay map[string]float64) {
+	// stat
+	aggrContributorsFor15weeks = map[string]float64{} // contributors id -> sum of rewards
+	aggrContributorsForAllDay = map[string]float64{} // contributors id -> sum of rewards
+
+	for _, fin := range fins {
+		totalAmount += fin.USD
+
+		if fin.Contributor == "" {
+			continue
+		}
+		createDate :=fin.CreatedTime
+		if createDate >= startDate{
+			if c, ok := aggrContributorsFor15weeks[fin.Contributor]; ok {
+				aggrContributorsFor15weeks[fin.Contributor] = c + fin.USD
+			} else {
+				aggrContributorsFor15weeks[fin.Contributor] = fin.USD
+			}
+		}
+		if c, ok := aggrContributorsForAllDay[fin.Contributor]; ok {
+			aggrContributorsForAllDay[fin.Contributor] = c + fin.USD
+		} else {
+			aggrContributorsForAllDay[fin.Contributor] = fin.USD
+		}
+	}
+
+	return
+}
+//统计新闻组最近15周的激励
+func (g *Guild) StatNewsFinance( nid,startDate string) (totalAmount float64, aggrContributorsFor15weeks map[string]float64, aggrContributorsForAllDay map[string]float64, err error) {
+	fins, err := g.db.GetNewsFinances(nid, nil)
+	// fmt.Println(fins[0])
+	if err != nil {
+		return
+	}
+	totalAmount, aggrContributorsFor15weeks, aggrContributorsForAllDay = g.statNewsFinance( fins,startDate)
+	return
+}
