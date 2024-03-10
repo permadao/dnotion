@@ -68,3 +68,5 @@ require (
 	gorm.io/datatypes v1.0.1 // indirect
 	gorm.io/gorm v1.22.4 // indirect
 )
+
+replace github.com/dstotijn/go-notion v0.11.0 => ./go-notion

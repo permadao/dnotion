@@ -219,3 +219,31 @@ func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints) []dbS
 	}
 	return nil
 }
+
+// 新闻工会等级计算
+func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+	_, aggrContributorsFor15weeks,aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid,lastDate)
+	if err != nil {
+		return
+	}
+	// fmt.Println(aggrContributorsFor15weeks)
+	news, err := g.db.GetNews(gradeNid, nil)
+	if err != nil {
+		return
+	}
+	id, err := g.db.GetLastID(gradeNid)
+	if err != nil {
+		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
+		return
+	}
+	insert := GRankToGradeForNews(aggrContributorsFor15weeks,aggrContributorsForAllDay, news,id, endDate)
+	for _, tr := range insert {
+		if err = g.db.UpdatePage(&tr); err != nil {
+			log.Error("update grade page failed", "err", err)
+			return
+		}
+
+	}
+
+	return
+}
