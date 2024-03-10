@@ -69,13 +69,13 @@ func (p *PromotionStat) SerializePropertys() (nid string, nprops *notion.Databas
 
 func (p *PromotionPoints) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
 	p.NID = nid
-	if len(props["Contributor"].Title) > 0 {
-		p.Contributor = props["Contributor"].Title[0].Text.Content
+	if len(props["Contributor"].People) > 0 {
+		p.Contributor = props["Contributor"].People[0].BaseUser.ID
 	}
 	if props["Base Points"].Rollup != nil {
-		p.BasePoints = *props["BasePoints"].Rollup.Number
+		p.BasePoints = *props["Base Points"].Rollup.Number
 	}
-	if len(props["Task"].People) > 0 {
+	if len(props["Task"].Relation) > 0 {
 		p.Task = props["Task"].Relation[0].ID
 	}
 }
@@ -97,13 +97,13 @@ func (p *PromotionPoints) SerializePropertys() (nid string, nprops *notion.Datab
 }
 func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
 	p.NID = nid
-	if len(props["Contributor"].Title) > 0 {
-		p.Contributor = props["Contributor"].Title[0].Text.Content
+	if len(props["Contributor"].People) > 0 {
+		p.Contributor = props["Contributor"].People[0].ID
 	}
-	if props["TotalScore"].Number != nil {
+	if props["Total Score"].Number != nil {
 		p.TotalScore = *props["TotalScore"].Number
 	}
-	if props["PersonalScore"].Number != nil {
+	if props["Personal Score"].Number != nil {
 		p.PersonalScore = *props["PersonalScore"].Number
 	}
 	if props["Rewards"].Number != nil {
@@ -116,29 +116,27 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 
 func (p *PromotionSettlement) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
 	props := notion.DatabasePageProperties{}
-	if p.Contributor != "" {
-		props["Contributor"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
-				{
-					Text: &notion.Text{
-						Content: p.Contributor,
-					},
-				},
-			},
-		}
-	}
+	//if p.Contributor != "" {
+	//	props["Contributor"] = notion.DatabasePageProperty{
+	//		People: []notion.User{
+	//			{
+	//				BaseUser: notion.BaseUser{ID: p.Contributor},
+	//			},
+	//		},
+	//	}
+	//}
 	if p.TotalScore != 0 {
-		props["TotalScore"] = notion.DatabasePageProperty{
+		props["Total Score"] = notion.DatabasePageProperty{
 			Number: &p.TotalScore,
 		}
 	}
 	if p.PersonalScore != 0 {
-		props["PersonalScore"] = notion.DatabasePageProperty{
+		props["Personal Score"] = notion.DatabasePageProperty{
 			Number: &p.PersonalScore,
 		}
 	}
 	if p.Rewards != 0 {
-		props["Income"] = notion.DatabasePageProperty{
+		props["Rewards"] = notion.DatabasePageProperty{
 			Number: &p.Rewards,
 		}
 	}

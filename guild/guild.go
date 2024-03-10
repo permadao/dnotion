@@ -1,14 +1,12 @@
 package guild
 
 import (
-	"fmt"
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	"github.com/permadao/dnotion/logger"
-	"math"
 )
 
 var log = logger.New("guild")
@@ -139,7 +137,7 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 	}
 	developers, err := g.db.GetDeveloper(gradeNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
-			notion.DatabaseQueryFilter{
+			{
 				Property: "Date",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Date: &notion.DatePropertyFilter{
@@ -164,65 +162,9 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 	return
 }
 
-func (g *Guild) GenPromotionSettlement(guidNid, outNid, lastDate, endDate string) (err error) {
-	//1 查询最新的输出表
-	endD, err := notion.ParseDateTime(endDate)
-	if err != nil {
-		return
-	}
-	ps, err := g.db.GetPromotionStat(guidNid, &notion.DatabaseQueryFilter{
-		And: []notion.DatabaseQueryFilter{
-			notion.DatabaseQueryFilter{
-				Property: "Date",
-				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-					Date: &notion.DatePropertyFilter{
-						Equals: &endD.Time,
-					},
-				},
-			},
-		},
-	})
-	if err != nil || len(ps) == 0 {
-		return
-	}
-	//2 统计输入表的数据
-	promotionPoints, err := g.db.GetPromotionPoints(ps[0].ID, nil)
-
-	fmt.Println(len(promotionPoints))
-	//3 输出
-	insert := CalculatePromotionRewards(promotionPoints)
-	for _, tr := range insert {
-		if err = g.db.CreatePage(outNid, &tr); err != nil {
-			log.Error("create the reward of promotion's page failed", "err", err)
-			return
-		}
-	}
-	return
-}
-
-func CalculateRewardPool(entry, promotions, entryW, pW float64) float64 {
-	//Constant
-	k := 1.0
-	return k*math.Pow(entry, entryW)/1 + math.Pow(entry/promotions, pW)
-}
-
-func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints) []dbSchema.PromotionSettlement {
-	totalPoints := 0.0
-	contributor := map[string]float64{}
-	promotinNum := map[string]struct{}{}
-	for _, p := range promotionPoints {
-		totalPoints += p.BasePoints
-		contributor[p.Contributor] += p.BasePoints
-		if _, ok := promotinNum[p.Task]; !ok {
-			promotinNum[p.Task] = struct{}{}
-		}
-	}
-	return nil
-}
-
 // 新闻工会等级计算
 func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
-	_, aggrContributorsFor15weeks,aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid,lastDate)
+	_, aggrContributorsFor15weeks, aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid, lastDate)
 	if err != nil {
 		return
 	}
@@ -236,7 +178,7 @@ func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err e
 		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
 		return
 	}
-	insert := GRankToGradeForNews(aggrContributorsFor15weeks,aggrContributorsForAllDay, news,id, endDate)
+	insert := GRankToGradeForNews(aggrContributorsFor15weeks, aggrContributorsForAllDay, news, id, endDate)
 	for _, tr := range insert {
 		if err = g.db.UpdatePage(&tr); err != nil {
 			log.Error("update grade page failed", "err", err)
@@ -245,5 +187,40 @@ func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err e
 
 	}
 
+	return
+}
+
+func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err error) {
+	//1 query the weekly table of promotion
+	endD, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+	ps, err := g.db.GetPromotionStat(guidNid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Equals: &endD.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil || len(ps) == 0 {
+		return
+	}
+	//2 to statistics the points of promotions
+	promotionPoints, err := g.db.GetPromotionPoints(ps[0].ID, nil)
+
+	//3 output
+	insert := CalculatePromotionRewards(promotionPoints, endDate)
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the reward of promotion's page failed", "err", err)
+			return
+		}
+	}
 	return
 }

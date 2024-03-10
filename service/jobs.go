@@ -58,6 +58,11 @@ func (s *Service) genGrade() {
 		log.Error("genNewsGrade failed", "err", err)
 	}
 
+	// Automatic settlement of brand promotion points
+	if err := s.guild.GenPromotionSettlement("14debb08a4e8416e9b0de7ce46821506", "2ea3ff42b3b84d5cbc9a575d4c436878", end); err != nil {
+		log.Error("Automatic settlement of brand promotion points failed", "err", err)
+	}
+
 	log.Info("genGrade done")
 }
 
