@@ -110,7 +110,7 @@ func GRankToGradeForNews(aggrContributorsFor15weeks map[string]float64, aggrCont
 	return
 }
 
-func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notionidToName map[string]string, date string) (promotionSettlement []dbSchema.PromotionSettlement) {
+func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notionidToName map[string]string, notionidToID map[string]*float64, date string) (promotionSettlement []dbSchema.PromotionSettlement) {
 	totalPoints := 0.0
 	contributors := map[string]float64{}
 	promotionNum := map[string]struct{}{}
@@ -123,12 +123,17 @@ func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notio
 	}
 	pool := CalculateRewardPool(float64(len(contributors)), float64(len(promotionNum)))
 	for contributor, points := range contributors {
+		name := notionidToName[contributor]
+		if _, ok := contributors[name]; ok {
+			name = name + fmt.Sprintf("%f", *notionidToID[contributor])
+		}
 		promotionSettlement = append(promotionSettlement, dbSchema.PromotionSettlement{
-			Contributor:   notionidToName[contributor],
-			TotalScore:    totalPoints,
-			PersonalScore: points,
-			Rewards:       pool * points / totalPoints,
-			Date:          date,
+			Contributor:         name,
+			ContributorNotionID: contributor,
+			TotalScore:          totalPoints,
+			PersonalScore:       points,
+			Rewards:             pool * points / totalPoints,
+			Date:                date,
 		})
 	}
 	return

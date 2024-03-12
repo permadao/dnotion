@@ -20,12 +20,13 @@ type PromotionPoints struct {
 }
 
 type PromotionSettlement struct {
-	NID           string
-	Contributor   string
-	TotalScore    float64
-	PersonalScore float64
-	Rewards       float64
-	Date          string
+	NID                 string
+	Contributor         string
+	ContributorNotionID string
+	TotalScore          float64
+	PersonalScore       float64
+	Rewards             float64
+	Date                string
 }
 
 func (p *PromotionStat) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
@@ -99,8 +100,12 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 	p.NID = nid
 	if len(props["Contributor"].People) > 0 {
 		p.Contributor = props["Contributor"].People[0].ID
-	} else if len(props["Contributor Name"].RichText) > 0 {
+	}
+	if len(props["Contributor Name"].RichText) > 0 {
 		p.Contributor = props["Contributor Name"].RichText[0].PlainText
+	}
+	if len(props["Contributor Notion ID"].RichText) > 0 {
+		p.Contributor = props["Contributor Notion ID"].RichText[0].PlainText
 	}
 	if props["Total Score"].Number != nil {
 		p.TotalScore = *props["Total Score"].Number
@@ -133,6 +138,17 @@ func (p *PromotionSettlement) SerializePropertys() (nid string, nprops *notion.D
 				{
 					Text: &notion.Text{
 						Content: p.Contributor,
+					},
+				},
+			},
+		}
+	}
+	if p.ContributorNotionID != "" {
+		props["Contributor Notion ID"] = notion.DatabasePageProperty{
+			RichText: []notion.RichText{
+				{
+					Text: &notion.Text{
+						Content: p.ContributorNotionID,
 					},
 				},
 			},
