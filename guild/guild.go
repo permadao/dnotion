@@ -15,16 +15,18 @@ type Guild struct {
 	db *db.DB
 
 	// contributors
-	nidToName   map[string]string //  contributor data nid -> contributors name
-	nidToWallet map[string]string // contributor data nid -> contributors wallet
+	nidToName      map[string]string //  contributor data nid -> contributors name
+	nidToWallet    map[string]string // contributor data nid -> contributors wallet
+	notionidToName map[string]string // contributor data notion id -> contributors name
 }
 
 func New(conf *config.Config, db *db.DB) *Guild {
 	g := &Guild{
 		db: db,
 
-		nidToName:   map[string]string{},
-		nidToWallet: map[string]string{},
+		nidToName:      map[string]string{},
+		nidToWallet:    map[string]string{},
+		notionidToName: map[string]string{},
 	}
 
 	g.initContributors()
@@ -43,6 +45,9 @@ func (g *Guild) initContributors() {
 		}
 		if c.Wallet != "" {
 			g.nidToWallet[c.NID] = c.Wallet
+		}
+		if c.NotionID != "" {
+			g.notionidToName[c.NotionID] = c.NotionName
 		}
 	}
 }
@@ -215,7 +220,7 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err err
 	promotionPoints, err := g.db.GetPromotionPoints(ps[0].ID, nil)
 
 	//3 output
-	insert := CalculatePromotionRewards(promotionPoints, endDate)
+	insert := CalculatePromotionRewards(promotionPoints, g.notionidToName, endDate)
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the reward of promotion's page failed", "err", err)

@@ -99,6 +99,8 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 	p.NID = nid
 	if len(props["Contributor"].People) > 0 {
 		p.Contributor = props["Contributor"].People[0].ID
+	} else if len(props["Contributor Name"].RichText) > 0 {
+		p.Contributor = props["Contributor Name"].RichText[0].PlainText
 	}
 	if props["Total Score"].Number != nil {
 		p.TotalScore = *props["Total Score"].Number
@@ -116,11 +118,22 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 
 func (p *PromotionSettlement) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
 	props := notion.DatabasePageProperties{}
+	//if p.Contributor != "" {
+	//	props["Contributor"] = notion.DatabasePageProperty{
+	//		People: []notion.User{
+	//			{
+	//				BaseUser: notion.BaseUser{ID: p.Contributor},
+	//			},
+	//		},
+	//	}
+	//}
 	if p.Contributor != "" {
-		props["Contributor"] = notion.DatabasePageProperty{
-			People: []notion.User{
+		props["Contributor Name"] = notion.DatabasePageProperty{
+			RichText: []notion.RichText{
 				{
-					BaseUser: notion.BaseUser{ID: p.Contributor},
+					Text: &notion.Text{
+						Content: p.Contributor,
+					},
 				},
 			},
 		}
