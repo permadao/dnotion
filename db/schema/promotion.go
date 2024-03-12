@@ -101,10 +101,10 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 		p.Contributor = props["Contributor"].People[0].ID
 	}
 	if props["Total Score"].Number != nil {
-		p.TotalScore = *props["TotalScore"].Number
+		p.TotalScore = *props["Total Score"].Number
 	}
 	if props["Personal Score"].Number != nil {
-		p.PersonalScore = *props["PersonalScore"].Number
+		p.PersonalScore = *props["Personal Score"].Number
 	}
 	if props["Rewards"].Number != nil {
 		p.Rewards = *props["Rewards"].Number
@@ -116,15 +116,15 @@ func (p *PromotionSettlement) DeserializePropertys(nid string, props notion.Data
 
 func (p *PromotionSettlement) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
 	props := notion.DatabasePageProperties{}
-	//if p.Contributor != "" {
-	//	props["Contributor"] = notion.DatabasePageProperty{
-	//		People: []notion.User{
-	//			{
-	//				BaseUser: notion.BaseUser{ID: p.Contributor},
-	//			},
-	//		},
-	//	}
-	//}
+	if p.Contributor != "" {
+		props["Contributor"] = notion.DatabasePageProperty{
+			People: []notion.User{
+				{
+					BaseUser: notion.BaseUser{ID: p.Contributor},
+				},
+			},
+		}
+	}
 	if p.TotalScore != 0 {
 		props["Total Score"] = notion.DatabasePageProperty{
 			Number: &p.TotalScore,
