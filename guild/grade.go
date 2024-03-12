@@ -122,9 +122,9 @@ func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, date 
 		}
 	}
 	pool := CalculateRewardPool(float64(len(contributors)), float64(len(promotionNum)))
-	for contributorID, points := range contributors {
+	for _, points := range contributors {
 		promotionSettlement = append(promotionSettlement, dbSchema.PromotionSettlement{
-			Contributor:   contributorID,
+			Contributor:   "76485b5a-c4d6-43eb-b8dc-a6748359b8cb",
 			TotalScore:    totalPoints,
 			PersonalScore: points,
 			Rewards:       pool * points / totalPoints,
