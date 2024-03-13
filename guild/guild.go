@@ -15,16 +15,20 @@ type Guild struct {
 	db *db.DB
 
 	// contributors
-	nidToName   map[string]string //  contributor data nid -> contributors name
-	nidToWallet map[string]string // contributor data nid -> contributors wallet
+	nidToName      map[string]string   //  contributor data nid -> contributors name
+	nidToWallet    map[string]string   // contributor data nid -> contributors wallet
+	notionidToName map[string]string   // contributor data notion id -> contributors name
+	notionidToID   map[string]*float64 // contributor data notion id -> contributors sort id
 }
 
 func New(conf *config.Config, db *db.DB) *Guild {
 	g := &Guild{
 		db: db,
 
-		nidToName:   map[string]string{},
-		nidToWallet: map[string]string{},
+		nidToName:      map[string]string{},
+		nidToWallet:    map[string]string{},
+		notionidToName: map[string]string{},
+		notionidToID:   map[string]*float64{},
 	}
 
 	g.initContributors()
@@ -43,6 +47,10 @@ func (g *Guild) initContributors() {
 		}
 		if c.Wallet != "" {
 			g.nidToWallet[c.NID] = c.Wallet
+		}
+		if c.NotionID != "" {
+			g.notionidToName[c.NotionID] = c.NotionName
+			g.notionidToID[c.NotionID] = c.ID
 		}
 	}
 }
@@ -137,7 +145,7 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 	}
 	developers, err := g.db.GetDeveloper(gradeNid, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
-			notion.DatabaseQueryFilter{
+			{
 				Property: "Date",
 				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 					Date: &notion.DatePropertyFilter{
@@ -164,7 +172,7 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 
 // 新闻工会等级计算
 func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
-	_, aggrContributorsFor15weeks,aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid,lastDate)
+	_, aggrContributorsFor15weeks, aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid, lastDate)
 	if err != nil {
 		return
 	}
@@ -178,14 +186,49 @@ func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err e
 		log.Error("get last id from page failed", "finance nid", gradeNid, "err", err)
 		return
 	}
-	insert := GRankToGradeForNews(aggrContributorsFor15weeks,aggrContributorsForAllDay, news,id, endDate)
+	insert := GRankToGradeForNews(aggrContributorsFor15weeks, aggrContributorsForAllDay, news, id, endDate)
 	for _, tr := range insert {
 		if err = g.db.UpdatePage(&tr); err != nil {
 			log.Error("update grade page failed", "err", err)
 			return
 		}
-	
+
 	}
 
+	return
+}
+
+func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err error) {
+	//1 query the weekly table of promotion
+	endD, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+	ps, err := g.db.GetPromotionStat(guidNid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Equals: &endD.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil || len(ps) == 0 {
+		return
+	}
+	//2 to statistics the points of promotions
+	promotionPoints, err := g.db.GetPromotionPoints(ps[0].ID, nil)
+
+	//3 output
+	insert := CalculatePromotionRewards(promotionPoints, g.notionidToName, g.notionidToID, endDate)
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the reward of promotion's page failed", "err", err)
+			return
+		}
+	}
 	return
 }
