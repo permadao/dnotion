@@ -6,10 +6,9 @@ import (
 )
 
 type PromotionStat struct {
-	NID   string
-	ID    string
-	OutDB string
-	Date  string
+	NID  string
+	ID   string
+	Date string
 }
 
 type PromotionPoints struct {
