@@ -1,8 +1,8 @@
 package finance
 
 import (
-	"github.com/everFinance/go-everpay/sdk"
 	"github.com/everFinance/goether"
+	"github.com/everVision/everpay-kits/sdk"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	"github.com/permadao/dnotion/logger"
