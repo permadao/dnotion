@@ -113,15 +113,11 @@ func GRankToGradeForNews(aggrContributorsFor15weeks map[string]float64, aggrCont
 func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notionidToName map[string]string, notionidToID map[string]*float64, date string) (promotionSettlement []dbSchema.PromotionSettlement) {
 	totalPoints := 0.0
 	contributors := map[string]float64{}
-	promotionNum := map[string]struct{}{}
 	for _, p := range promotionPoints {
 		totalPoints += p.BasePoints
 		contributors[p.Contributor] += p.BasePoints
-		if _, ok := promotionNum[p.Task]; !ok {
-			promotionNum[p.Task] = struct{}{}
-		}
 	}
-	pool := CalculateRewardPool(float64(len(contributors)), float64(len(promotionNum)))
+	pool := CalculateRewardPool(float64(len(contributors)), float64(len(promotionPoints)))
 	for contributor, points := range contributors {
 		name := notionidToName[contributor]
 		if _, ok := contributors[name]; ok {
@@ -141,15 +137,15 @@ func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notio
 
 // CalculateRewardPool Calculation method of total weekly funds
 // entry : total number of weekly contributors
-// promotions: total number of weekly tasks
+// promotions: total number of weekly promotion record
 // constant : constant
 // entryW : weight for entry
 // pw : weight for promotion
-func CalculateRewardPool(entry, promotions float64) float64 {
+func CalculateRewardPool(entry, recordNum float64) float64 {
 	constant := 50.0
 	entryW := 0.8
 	pW := 0.7
-	return constant * math.Pow(entry, entryW) / (1 + math.Pow(entry/promotions, pW))
+	return constant * math.Pow(entry, entryW) / (1 + math.Pow(entry/recordNum, pW))
 }
 
 func GDNewsLevel(income float64) (res string, code string) {
