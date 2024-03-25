@@ -120,9 +120,6 @@ func CalculatePromotionRewards(promotionPoints []dbSchema.PromotionPoints, notio
 	pool := CalculateRewardPool(float64(len(contributors)), float64(len(promotionPoints)))
 	for contributor, points := range contributors {
 		name := notionidToName[contributor]
-		if _, ok := contributors[name]; ok {
-			name = name + fmt.Sprintf("%f", *notionidToID[contributor])
-		}
 		promotionSettlement = append(promotionSettlement, dbSchema.PromotionSettlement{
 			Contributor:         name,
 			ContributorNotionID: contributor,

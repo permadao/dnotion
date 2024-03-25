@@ -23,6 +23,11 @@ func (s *Service) runJobs() {
 		gocron.NewTask(s.genGuilds),
 	)
 
+	s.scheduler.NewJob(
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Friday), gocron.NewAtTimes(gocron.NewAtTime(12, 0, 0))),
+		gocron.NewTask(s.genPromotionsStat),
+	)
+
 	s.scheduler.Start()
 }
 
@@ -58,12 +63,16 @@ func (s *Service) genGrade() {
 		log.Error("genNewsGrade failed", "err", err)
 	}
 
+	log.Info("genGrade done")
+}
+
+func (s *Service) genPromotionsStat() {
+	end := GetCurrentDate()
 	// Automatic settlement of brand promotion points
 	if err := s.guild.GenPromotionSettlement("14debb08a4e8416e9b0de7ce46821506", "2ea3ff42b3b84d5cbc9a575d4c436878", end); err != nil {
 		log.Error("Automatic settlement of brand promotion points failed", "err", err)
 	}
-
-	log.Info("genGrade done")
+	log.Info("genPromotionsStat done")
 }
 
 func GetCurrentDate() (date string) {
