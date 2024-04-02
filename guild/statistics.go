@@ -324,3 +324,88 @@ func (g *Guild) StatNewsFinance(nid, startDate string) (totalAmount float64, agg
 	totalAmount, aggrContributorsFor15weeks, aggrContributorsForAllDay = g.statNewsFinance(fins, startDate)
 	return
 }
+
+func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+	start, err := notion.ParseDateTime(startDate)
+	if err != nil {
+		return
+	}
+	end, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Status: &notion.StatusDatabaseQueryFilter{
+						Equals: "Done",
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &start.Time,
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrBefore: &end.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+	totalAmount, contributors, rankOfContributor = g.statFinanceGroupByCNID(targetToken, fins)
+	return
+}
+
+func (g *Guild) statFinanceGroupByCNID(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
+	// stat
+	aggrContributors := map[string]float64{} // contributors id -> sum of rewards
+	for _, fin := range fins {
+		if fin.Contributor == "" {
+			continue
+		}
+		switch targetToken {
+		case "":
+			totalAmount += fin.Amount
+			aggrContributors[fin.Contributor] += fin.Amount
+		case fin.TargetToken:
+			totalAmount += fin.TargetAmount
+			aggrContributors[fin.Contributor] += fin.TargetAmount
+		default:
+			continue
+		}
+	}
+
+	// gen contributors & rank
+	contributors = map[string]float64{}
+	for k, v := range aggrContributors {
+		_, ok := g.nidToName[k]
+		if !ok {
+			continue
+		}
+		contributors[k] = v
+
+		wallet := g.nidToWallet[k]
+		rankOfContributor = append(rankOfContributor, schema.Contributor{Name: k, Amount: v, Wallet: wallet})
+	}
+
+	// sort and rank
+	sort.Slice(rankOfContributor, func(i, j int) bool {
+		return rankOfContributor[i].Amount > rankOfContributor[j].Amount
+	})
+
+	return
+}

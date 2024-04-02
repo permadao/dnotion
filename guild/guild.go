@@ -7,6 +7,7 @@ import (
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	"github.com/permadao/dnotion/logger"
+	"time"
 )
 
 var log = logger.New("guild")
@@ -227,6 +228,61 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err err
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the reward of promotion's page failed", "err", err)
+			return
+		}
+	}
+	return
+}
+
+func (g *Guild) GenIncentiveStat(outNid string) (err error) {
+	gfm := GetGuildFinMap()
+	now := time.Now().Format("2006-01-02")
+	threeDaysAgo := time.Now().AddDate(0, 0, -3).Format("2006-01-02")
+	startDate := "1970-01-01"
+	insert := []dbSchema.Incentive{}
+	for guild, nid := range gfm {
+		_, contributorsAllTime, _, err := g.StatBetweenFinanceGroupByCNID("", nid, startDate, threeDaysAgo)
+		if err != nil {
+			log.Error("statistic the incentive of various guild failed", "err", err)
+			return
+		}
+		_, contributorsThisWeek, _, err := g.StatBetweenFinanceGroupByCNID("", nid, threeDaysAgo, now)
+		if err != nil {
+			log.Error("statistic the incentive of various guild failed", "err", err)
+			return
+		}
+		insert = append(insert, GenStatRecords(contributorsAllTime, contributorsThisWeek, guild, now)...)
+	}
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the records of incentive's statistic page failed", "err", err)
+			return
+		}
+	}
+	return nil
+}
+
+func (g *Guild) GenTotalIncentiveStat(outNid, acDateStr string) (err error) {
+	acDate, err := notion.ParseDateTime(acDateStr)
+	if err != nil {
+		return
+	}
+	data, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Accounting Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						Equals: &acDate.Time,
+					},
+				},
+			},
+		},
+	})
+	insert := CalTotalIncentive(data)
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the incentive_weekly_guild page failed", "err", err)
 			return
 		}
 	}
