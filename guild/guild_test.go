@@ -1,6 +1,9 @@
 package guild
 
 import (
+	"fmt"
+	"github.com/permadao/dnotion/config"
+	"github.com/permadao/dnotion/db"
 	"testing"
 )
 
@@ -30,4 +33,24 @@ func TestGuild_GenPromotionSettlement(t *testing.T) {
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
+}
+
+func TestGuild_GenStatRecords(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	err := g.GenIncentiveStat("45305636a546442ab5fb36fc5446b035")
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	err := g.GenTotalIncentiveStat("3b2c67a9b20e42208f5f3f24b8cec52c", "2024-04-03")
+	if err != nil {
+		fmt.Println(err)
+	}
 }

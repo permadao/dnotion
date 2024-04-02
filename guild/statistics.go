@@ -2,6 +2,7 @@ package guild
 
 import (
 	"sort"
+	"time"
 
 	"github.com/dstotijn/go-notion"
 	dbSchema "github.com/permadao/dnotion/db/schema"
@@ -365,6 +366,58 @@ func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDa
 	})
 	if err != nil {
 		return
+	}
+	totalAmount, contributors, rankOfContributor = g.statFinanceGroupByCNID(targetToken, fins)
+	return
+}
+
+func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, paymentDate string, err error) {
+	startDate := time.Now().AddDate(0, 0, -3).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+	start, err := notion.ParseDateTime(startDate)
+	if err != nil {
+		return
+	}
+	end, err := notion.ParseDateTime(endDate)
+	if err != nil {
+		return
+	}
+
+	fins, err := g.db.GetFinances(nid, &notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			notion.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Status: &notion.StatusDatabaseQueryFilter{
+						Equals: "Done",
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &start.Time,
+					},
+				},
+			},
+			notion.DatabaseQueryFilter{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrBefore: &end.Time,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return
+	}
+	if len(fins) > 0 {
+		paymentDate = fins[0].PaymentDate
+	} else {
+		paymentDate = endDate
 	}
 	totalAmount, contributors, rankOfContributor = g.statFinanceGroupByCNID(targetToken, fins)
 	return

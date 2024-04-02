@@ -146,6 +146,7 @@ func CalculateRewardPool(entry, recordNum float64) float64 {
 }
 
 func GetGuildFinMap() (gfm map[string]string) {
+	gfm = make(map[string]string)
 	gfm["Content"] = "328f2bfbfdbe4f9581af37f393893e36"
 	gfm["Translation"] = "e8d79c55c0394cba83664f3e5737b0bd"
 	gfm["Submission"] = "a815dcd96395424a93d9854b4418ab03"

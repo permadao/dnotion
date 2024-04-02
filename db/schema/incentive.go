@@ -9,6 +9,7 @@ type Incentive struct {
 	NID               string
 	ID                string
 	AccountingDate    string
+	NotionID          string
 	Guild             string
 	NotionName        string
 	BuddyNotion       string
@@ -23,6 +24,7 @@ type TotalIncentive struct {
 	NID               string
 	ID                string
 	AccountingDate    string
+	NotionID          string
 	NotionName        string
 	BuddyNotion       string
 	TotalIncentive    float64
@@ -40,11 +42,14 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 	if props["Accounting Date"].Date != nil {
 		i.AccountingDate = props["Accounting Date"].Date.Start.Format("2006-01-02")
 	}
-	if len(props["Guild"].Title) > 0 {
-		i.Guild = props["Guild"].Title[0].Text.Content
+	if len(props["Notion ID"].Title) > 0 {
+		i.NotionID = props["Notion ID"].Title[0].Text.Content
 	}
-	if len(props["Notion Name"].Title) > 0 {
-		i.NotionName = props["Notion Name"].Title[0].Text.Content
+	if props["Guild"].Select != nil {
+		i.Guild = props["Guild"].Select.Name
+	}
+	if len(props["Notion Name"].RichText) > 0 {
+		i.NotionName = props["Notion Name"].RichText[0].PlainText
 	}
 	if len(props["Buddy Notion"].Title) > 0 {
 		i.BuddyNotion = props["Buddy Notion"].Title[0].Text.Content
@@ -69,7 +74,7 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
 	props := notion.DatabasePageProperties{}
 	if i.ID != "" {
-		props["Contributor"] = notion.DatabasePageProperty{
+		props["ID"] = notion.DatabasePageProperty{
 			Title: []notion.RichText{
 				{
 					Text: &notion.Text{
@@ -94,10 +99,15 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 	}
 	if i.Guild != "" {
 		props["Guild"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: i.Guild},
+		}
+	}
+	if i.NotionID != "" {
+		props["Notion ID"] = notion.DatabasePageProperty{
 			Title: []notion.RichText{
 				{
 					Text: &notion.Text{
-						Content: i.Guild,
+						Content: i.NotionID,
 					},
 				},
 			},
@@ -105,7 +115,7 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 	}
 	if i.NotionName != "" {
 		props["Notion Name"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
+			RichText: []notion.RichText{
 				{
 					Text: &notion.Text{
 						Content: i.NotionName,
@@ -176,7 +186,7 @@ func (t *TotalIncentive) DeserializePropertys(nid string, props notion.DatabaseP
 func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
 	props := notion.DatabasePageProperties{}
 	if t.ID != "" {
-		props["Contributor"] = notion.DatabasePageProperty{
+		props["ID"] = notion.DatabasePageProperty{
 			Title: []notion.RichText{
 				{
 					Text: &notion.Text{
@@ -199,9 +209,20 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 			}
 		}
 	}
+	if t.NotionID != "" {
+		props["Notion ID"] = notion.DatabasePageProperty{
+			Title: []notion.RichText{
+				{
+					Text: &notion.Text{
+						Content: t.NotionID,
+					},
+				},
+			},
+		}
+	}
 	if t.NotionName != "" {
 		props["Notion Name"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
+			RichText: []notion.RichText{
 				{
 					Text: &notion.Text{
 						Content: t.NotionName,
