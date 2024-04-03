@@ -39,9 +39,12 @@ func TestGuild_GenStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	err := g.GenIncentiveStat("45305636a546442ab5fb36fc5446b035")
+	success, _, err := g.GenIncentiveStat("45305636a546442ab5fb36fc5446b035", "2024-04-03")
 	if err != nil {
 		fmt.Println(err)
+	}
+	if success {
+		fmt.Println(success)
 	}
 }
 

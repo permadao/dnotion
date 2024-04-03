@@ -160,16 +160,20 @@ func GetGuildFinMap() (gfm map[string]string) {
 	return
 }
 
-func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek map[string]float64, guild string, acDate string, paymentDate string, pageID int) (incentiveRecords []dbSchema.Incentive) {
+func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek map[string]float64, guild string, acDate string, paymentDate string, pageID int, g *Guild) (incentiveRecords []dbSchema.Incentive) {
 	for contributor, amount := range contributorsAllTime {
+		if _, ok := g.nidToName[contributor]; !ok {
+			continue
+		}
 		incentiveRecord := dbSchema.Incentive{
 			AccountingDate: acDate,
 			Guild:          guild,
-			NotionName:     contributor,
-			BuddyNotion:    "",
+			NotionName:     g.nidToName[contributor],
+			NotionID:       contributor,
+			BuddyNotion:    g.notionidToName[g.nidToContributor[contributor].BuddyNotion],
 			TotalIncentive: amount,
 			PaymentDate:    paymentDate,
-			OnboardDate:    "",
+			OnboardDate:    g.nidToContributor[contributor].CreatedTime,
 		}
 		if weekAmount, ok := contributorsThisWeek[contributor]; ok {
 			incentiveRecord.WeeklyIncentive = weekAmount
@@ -196,6 +200,7 @@ func CalTotalIncentive(data []dbSchema.Incentive, pageID int) (totalIncentiveRec
 			contributorMap[incentive.NotionName] = &dbSchema.TotalIncentive{
 				ID:                fmt.Sprintf("%d", pageID),
 				AccountingDate:    incentive.AccountingDate,
+				NotionID:          incentive.NotionID,
 				NotionName:        incentive.NotionName,
 				BuddyNotion:       incentive.BuddyNotion,
 				TotalIncentive:    incentive.TotalIncentive,

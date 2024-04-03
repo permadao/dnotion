@@ -27,7 +27,15 @@ func (s *Service) runJobs() {
 		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Friday), gocron.NewAtTimes(gocron.NewAtTime(12, 0, 0))),
 		gocron.NewTask(s.genPromotionsStat),
 	)
-
+	startHour := 0
+	intervalHours := 2
+	endHour := 24 // 假设我们想要在晚上10点结束
+	for hour := startHour; hour <= endHour; hour += intervalHours {
+		s.scheduler.NewJob(
+			gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(uint(hour), 0, 0))),
+			gocron.NewTask(s.genIncentiveStat),
+		)
+	}
 	s.scheduler.Start()
 }
 
@@ -75,6 +83,29 @@ func (s *Service) genPromotionsStat() {
 	log.Info("genPromotionsStat done")
 }
 
+func (s *Service) genIncentiveStat() {
+	now := GetCurrentDate()
+	threeDaysAgo := GetPreviousDate(3)
+	//没有记录不执行
+	exist, err := s.guild.IsExistRecord(now)
+	if !exist || err != nil {
+		return
+	}
+	exist = s.guild.IsExistIncentiveStatRecord(threeDaysAgo)
+	if exist {
+		return
+	}
+	success, paymentDate, err := s.guild.GenIncentiveStat("45305636a546442ab5fb36fc5446b035", now)
+	if err != nil {
+		log.Error("GenIncentiveStat failed", "err", err)
+	}
+	if success {
+		err = s.guild.GenTotalIncentiveStat("3b2c67a9b20e42208f5f3f24b8cec52c", paymentDate)
+		if err != nil {
+			log.Error("GenIncentiveStat failed", "err", err)
+		}
+	}
+}
 func GetCurrentDate() (date string) {
 	now := time.Now()
 	date = now.Format("2006-01-02")

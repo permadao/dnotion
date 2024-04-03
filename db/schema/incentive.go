@@ -51,14 +51,14 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 	if len(props["Notion Name"].RichText) > 0 {
 		i.NotionName = props["Notion Name"].RichText[0].PlainText
 	}
-	if len(props["Buddy Notion"].Title) > 0 {
-		i.BuddyNotion = props["Buddy Notion"].Title[0].Text.Content
+	if len(props["Buddy Notion"].RichText) > 0 {
+		i.BuddyNotion = props["Buddy Notion"].RichText[0].PlainText
 	}
-	if props["Total Incentive"].Rollup != nil {
-		i.TotalIncentive = *props["Total Incentive"].Rollup.Number
+	if props["Total Incentive"].Number != nil {
+		i.TotalIncentive = *props["Total Incentive"].Number
 	}
-	if props["Weekly Incentive"].Rollup != nil {
-		i.TotalIncentive = *props["Weekly Incentive"].Rollup.Number
+	if props["Weekly Incentive"].Number != nil {
+		i.TotalIncentive = *props["Weekly Incentive"].Number
 	}
 	if props["Payment Date"].Date != nil {
 		i.PaymentDate = props["Payment Date"].Date.Start.Format("2006-01-02")
@@ -66,8 +66,8 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 	if props["Onboard Date"].Date != nil {
 		i.OnboardDate = props["Onboard Date"].Date.Start.Format("2006-01-02")
 	}
-	if props["First Contribution"].Select != nil {
-		i.FirstContribution = props["Firs tContribution"].Select.Name
+	if props["First contribution"].Select != nil {
+		i.FirstContribution = props["First contribution"].Select.Name
 	}
 }
 
@@ -126,7 +126,7 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 	}
 	if i.BuddyNotion != "" {
 		props["Buddy Notion"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
+			RichText: []notion.RichText{
 				{
 					Text: &notion.Text{
 						Content: i.BuddyNotion,
@@ -172,7 +172,7 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 		}
 	}
 	if i.FirstContribution != "" {
-		props["First Contribution"] = notion.DatabasePageProperty{
+		props["First contribution"] = notion.DatabasePageProperty{
 			Select: &notion.SelectOptions{Name: i.FirstContribution},
 		}
 	}
@@ -233,7 +233,7 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 	}
 	if t.BuddyNotion != "" {
 		props["Buddy Notion"] = notion.DatabasePageProperty{
-			Title: []notion.RichText{
+			RichText: []notion.RichText{
 				{
 					Text: &notion.Text{
 						Content: t.BuddyNotion,
@@ -279,7 +279,7 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 		}
 	}
 	if t.FirstContribution != "" {
-		props["First Contribution"] = notion.DatabasePageProperty{
+		props["First contribution"] = notion.DatabasePageProperty{
 			Select: &notion.SelectOptions{Name: t.FirstContribution},
 		}
 	}

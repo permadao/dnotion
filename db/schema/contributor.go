@@ -5,11 +5,13 @@ import (
 )
 
 type ContributorData struct {
-	NID        string // notion id for update
-	ID         *float64
-	NotionName string
-	NotionID   string
-	Wallet     string
+	NID         string // notion id for update
+	ID          *float64
+	NotionName  string
+	NotionID    string
+	Wallet      string
+	BuddyNotion string
+	CreatedTime string
 	// TODO: more fields
 }
 
@@ -26,6 +28,12 @@ func (f *ContributorData) DeserializePropertys(nid string, props notion.Database
 	}
 	if len(props["Wallet"].RichText) > 0 {
 		f.Wallet = props["Wallet"].RichText[0].Text.Content
+	}
+	if len(props["Buddy Notion"].People) > 0 {
+		f.BuddyNotion = props["Buddy Notion"].People[0].BaseUser.ID
+	}
+	if props["Created time"].CreatedTime != nil {
+		f.CreatedTime = props["Created time"].CreatedTime.Format("2006-01-02")
 	}
 }
 

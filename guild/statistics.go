@@ -371,9 +371,9 @@ func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDa
 	return
 }
 
-func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, paymentDate string, err error) {
-	startDate := time.Now().AddDate(0, 0, -3).Format("2006-01-02")
-	endDate := time.Now().Format("2006-01-02")
+func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, paymentDate string, err error) {
+	endDateParser, _ := time.Parse("2006-01-02", endDate)
+	startDate := endDateParser.AddDate(0, 0, -3).Format("2006-01-02")
 	start, err := notion.ParseDateTime(startDate)
 	if err != nil {
 		return
