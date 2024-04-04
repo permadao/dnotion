@@ -237,7 +237,7 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err err
 	return
 }
 
-func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDate string, err error) {
+func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateMap map[string]int, err error) {
 	gfm := GetGuildFinMap()
 	startDate := "1970-01-01"
 	insert := []dbSchema.Incentive{}
@@ -245,22 +245,22 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDate 
 	if err != nil {
 		pageId = 1
 	}
+	paymentDateMap = map[string]int{}
 	for guild, nid := range gfm {
 		_, contributorsAllTime, _, err := g.StatBetweenFinanceGroupByCNID("", nid, startDate, now)
 		if err != nil {
 			log.Error("statistic the incentive of various guild failed", "err", err)
-			return false, "", err
+			return false, paymentDateMap, err
 		}
 		_, contributorsThisWeek, _, paymentDate, err := g.StatWeeklyFinanceGroupByCNID("", nid, now)
 		if err != nil {
 			log.Error("statistic the incentive of various guild failed", "err", err)
-			return false, "", err
+			return false, paymentDateMap, err
 		}
 		insert = append(insert, GenStatRecords(contributorsAllTime, contributorsThisWeek, guild, now, paymentDate, pageId, g)...)
+		paymentDateMap[paymentDate]++
 	}
-	if len(insert) > 0 {
-		paymentDate = insert[0].PaymentDate
-	}
+
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the records of incentive's statistic page failed", "err", err)
@@ -270,34 +270,39 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDate 
 	return
 }
 
-func (g *Guild) GenTotalIncentiveStat(outNid, paymentDateStr string) (err error) {
-	paymentDate, err := notion.ParseDateTime(paymentDateStr)
-	if err != nil {
-		return
-	}
-	data, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
-		And: []notion.DatabaseQueryFilter{
-			{
-				Property: "Payment Date",
-				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-					Date: &notion.DatePropertyFilter{
-						Equals: &paymentDate.Time,
+func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]int) (err error) {
+	incentiveData := []dbSchema.Incentive{}
+	for paymentDateStr, _ := range paymentDateMap {
+		paymentDate, err := notion.ParseDateTime(paymentDateStr)
+		if err != nil {
+			return err
+		}
+		data, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+			And: []notion.DatabaseQueryFilter{
+				{
+					Property: "Payment Date",
+					DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+						Date: &notion.DatePropertyFilter{
+							Equals: &paymentDate.Time,
+						},
 					},
 				},
 			},
-		},
-	})
+		})
+		incentiveData = append(incentiveData, data...)
+	}
 	pageId, err := g.db.GetLastID(outNid)
 	if err != nil {
 		pageId = 1
 	}
-	insert := CalTotalIncentive(data, pageId)
+	insert := CalTotalIncentive(incentiveData, pageId)
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the incentive_weekly_guild page failed", "err", err)
 			return
 		}
 	}
+
 	return
 }
 
