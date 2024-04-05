@@ -100,9 +100,9 @@ func (s *Service) genIncentiveStat() {
 		log.Error("GenIncentiveStat failed", "err", err)
 	}
 	if success {
-		err = s.guild.GenTotalIncentiveStat("3b2c67a9b20e42208f5f3f24b8cec52c", paymentDateMap)
+		err = s.guild.GenTotalIncentiveStat("725db33292294f5281c150b9460af8e5", paymentDateMap)
 		if err != nil {
-			log.Error("GenIncentiveStat failed", "err", err)
+			log.Error("GenTotalIncentiveStat failed", "err", err)
 		}
 	}
 }

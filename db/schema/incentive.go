@@ -58,7 +58,7 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 		i.TotalIncentive = *props["Total Incentive"].Number
 	}
 	if props["Weekly Incentive"].Number != nil {
-		i.TotalIncentive = *props["Weekly Incentive"].Number
+		i.WeeklyIncentive = *props["Weekly Incentive"].Number
 	}
 	if props["Payment Date"].Date != nil {
 		i.PaymentDate = props["Payment Date"].Date.Start.Format("2006-01-02")
