@@ -39,7 +39,7 @@ func TestGuild_GenStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	success, _, err := g.GenIncentiveStat("9b10c91d689c4019a4d888e8972e363e", "2024-03-22")
+	success, _, err := g.GenIncentiveStat("531e2bb0eebd421988457692648c6953", "2024-03-22")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -53,8 +53,8 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 	d := db.New(c)
 	g := New(c, d)
 	paymentDateMap := map[string]int{}
-	paymentDateMap["2024-03-29"]++
-	err := g.GenTotalIncentiveStat("725db33292294f5281c150b9460af8e5", paymentDateMap)
+	paymentDateMap["2024-03-22"]++
+	err := g.GenTotalIncentiveStat("3c216ceea5ff4a9ea676ed5730c98253", paymentDateMap)
 	if err != nil {
 		fmt.Println(err)
 	}

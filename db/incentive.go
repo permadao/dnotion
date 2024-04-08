@@ -6,7 +6,7 @@ import (
 )
 
 func (d *DB) GetIncentiveData(filter *notion.DatabaseQueryFilter) ([]schema.Incentive, error) {
-	nid := "9b10c91d689c4019a4d888e8972e363e"
+	nid := "531e2bb0eebd421988457692648c6953"
 	pages, err := d.GetPages(nid, filter)
 	if err != nil {
 		return nil, err

@@ -147,12 +147,12 @@ func CalculateRewardPool(entry, recordNum float64) float64 {
 
 func GetGuildFinMap() (gfm map[string]string) {
 	gfm = make(map[string]string)
+	gfm["Promotion"] = "990db3313e42412b8c6ab07e399a2635"
+	gfm["admin"] = "caac7a1aefcc4ed0b02b8adbc106f021"
 	gfm["Content"] = "328f2bfbfdbe4f9581af37f393893e36"
 	gfm["Translation"] = "e8d79c55c0394cba83664f3e5737b0bd"
 	gfm["Submission"] = "a815dcd96395424a93d9854b4418ab03"
-	gfm["Promotion"] = "990db3313e42412b8c6ab07e399a2635"
 	gfm["Activity"] = "f2160eae42e9483882f01d3daa7090fa"
-	gfm["admin"] = "caac7a1aefcc4ed0b02b8adbc106f021"
 	gfm["dev"] = "146e1f661ed943e3a460b8cf12334b7b"
 	gfm["Psp Market"] = "a9ce0c5902b14e4891ed0fb6333a9e92"
 	gfm["Psp Product"] = "27555aec8d734b6889ae1836d7a67b4a"
@@ -165,18 +165,19 @@ func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek
 		if _, ok := g.nidToName[contributor]; !ok {
 			continue
 		}
-		incentiveRecord := dbSchema.Incentive{
-			AccountingDate: acDate,
-			Guild:          guild,
-			NotionName:     g.nidToName[contributor],
-			NotionID:       contributor,
-			BuddyNotion:    g.notionidToName[g.nidToContributor[contributor].BuddyNotion],
-			TotalIncentive: amount,
-			PaymentDate:    paymentDate,
-			OnboardDate:    g.nidToContributor[contributor].CreatedTime,
+		if _, ok := contributorsThisWeek[contributor]; !ok {
+			continue
 		}
-		if weekAmount, ok := contributorsThisWeek[contributor]; ok {
-			incentiveRecord.WeeklyIncentive = weekAmount
+		incentiveRecord := dbSchema.Incentive{
+			AccountingDate:  acDate,
+			Guild:           guild,
+			NotionName:      g.nidToName[contributor],
+			NotionID:        contributor,
+			BuddyNotion:     g.notionidToName[g.nidToContributor[contributor].BuddyNotion],
+			TotalIncentive:  amount,
+			WeeklyIncentive: contributorsThisWeek[contributor],
+			PaymentDate:     paymentDate,
+			OnboardDate:     g.nidToContributor[contributor].CreatedTime,
 		}
 		if incentiveRecord.TotalIncentive == incentiveRecord.WeeklyIncentive {
 			incentiveRecord.FirstContribution = "Yes"
