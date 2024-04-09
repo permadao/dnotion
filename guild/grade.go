@@ -198,7 +198,7 @@ func CalTotalIncentive(data []dbSchema.Incentive, pageID int) (totalIncentiveRec
 			(*totalIncentive).WeeklyIncentive += incentive.WeeklyIncentive
 		} else {
 			pageID++
-			contributorMap[incentive.NotionName] = &dbSchema.TotalIncentive{
+			contributorMap[incentive.NotionID] = &dbSchema.TotalIncentive{
 				ID:                fmt.Sprintf("%d", pageID),
 				AccountingDate:    incentive.AccountingDate,
 				NotionID:          incentive.NotionID,

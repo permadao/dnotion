@@ -267,6 +267,7 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateM
 			return
 		}
 	}
+	success = true
 	return
 }
 
