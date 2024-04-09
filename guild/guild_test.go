@@ -39,12 +39,18 @@ func TestGuild_GenStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	success, _, err := g.GenIncentiveStat("4d5858b112f24793bedefde30bca3c08", "2024-03-22")
+	//startDate, _ := time.Parse("2006-01-02", "2023-03-03")
+	//endDate, _ := time.Parse("2006-01-02", "2024-04-06")
+	//for startDate.
+	success, paydateMap, err := g.GenIncentiveStat("a100a4cad37741baa5c689dbff5075bb", "2023-03-03")
 	if err != nil {
 		fmt.Println(err)
 	}
 	if success {
-		fmt.Println(success)
+		err := g.GenTotalIncentiveStat("1d17a98ef594464294f38845c696139f", paydateMap)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -54,7 +60,7 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 	g := New(c, d)
 	paymentDateMap := map[string]int{}
 	paymentDateMap["2024-03-22"]++
-	err := g.GenTotalIncentiveStat("2ee8b95ebc4145baafd80b499c660172", paymentDateMap)
+	err := g.GenTotalIncentiveStat("1d17a98ef594464294f38845c696139f", paymentDateMap)
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -95,12 +95,12 @@ func (s *Service) genIncentiveStat() {
 	if exist {
 		return
 	}
-	success, paymentDateMap, err := s.guild.GenIncentiveStat("4d5858b112f24793bedefde30bca3c08", now)
+	success, paymentDateMap, err := s.guild.GenIncentiveStat("a100a4cad37741baa5c689dbff5075bb", now)
 	if err != nil {
 		log.Error("GenIncentiveStat failed", "err", err)
 	}
 	if success {
-		err = s.guild.GenTotalIncentiveStat("2ee8b95ebc4145baafd80b499c660172", paymentDateMap)
+		err = s.guild.GenTotalIncentiveStat("1d17a98ef594464294f38845c696139f", paymentDateMap)
 		if err != nil {
 			log.Error("GenTotalIncentiveStat failed", "err", err)
 		}
