@@ -246,22 +246,18 @@ func (g *Guild) statFinance(targetToken string, fins []dbSchema.FinData) (totalA
 	// stat
 	aggrContributors := map[string]float64{} // contributors id -> sum of rewards
 	for _, fin := range fins {
-		switch targetToken {
-		case "":
-			totalAmount += fin.Amount
-		case fin.TargetToken:
-			totalAmount += fin.TargetAmount
-		default:
-			continue
-		}
-
 		if fin.Contributor == "" {
 			continue
 		}
-		if c, ok := aggrContributors[fin.Contributor]; ok {
-			aggrContributors[fin.Contributor] = c + fin.TargetAmount
-		} else {
-			aggrContributors[fin.Contributor] = fin.TargetAmount
+		switch targetToken {
+		case "":
+			totalAmount += fin.Amount
+			aggrContributors[fin.Contributor] += fin.Amount
+		case fin.TargetToken:
+			totalAmount += fin.TargetAmount
+			aggrContributors[fin.Contributor] += fin.TargetAmount
+		default:
+			continue
 		}
 	}
 
@@ -373,7 +369,7 @@ func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDa
 
 func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, paymentDate string, err error) {
 	endDateParser, _ := time.Parse("2006-01-02", endDate)
-	startDate := endDateParser.AddDate(0, 0, -3).Format("2006-01-02")
+	startDate := endDateParser.AddDate(0, 0, -6).Format("2006-01-02")
 	start, err := notion.ParseDateTime(startDate)
 	if err != nil {
 		return
@@ -445,10 +441,6 @@ func (g *Guild) statFinanceGroupByCNID(targetToken string, fins []dbSchema.FinDa
 	// gen contributors & rank
 	contributors = map[string]float64{}
 	for k, v := range aggrContributors {
-		_, ok := g.nidToName[k]
-		if !ok {
-			continue
-		}
 		contributors[k] = v
 
 		wallet := g.nidToWallet[k]

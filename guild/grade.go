@@ -147,12 +147,12 @@ func CalculateRewardPool(entry, recordNum float64) float64 {
 
 func GetGuildFinMap() (gfm map[string]string) {
 	gfm = make(map[string]string)
+	gfm["Activity"] = "f2160eae42e9483882f01d3daa7090fa"
 	gfm["Promotion"] = "990db3313e42412b8c6ab07e399a2635"
 	gfm["Admin"] = "caac7a1aefcc4ed0b02b8adbc106f021"
 	gfm["Content"] = "328f2bfbfdbe4f9581af37f393893e36"
 	gfm["Translation"] = "e8d79c55c0394cba83664f3e5737b0bd"
 	gfm["Submission"] = "a815dcd96395424a93d9854b4418ab03"
-	gfm["Activity"] = "f2160eae42e9483882f01d3daa7090fa"
 	gfm["Develop"] = "146e1f661ed943e3a460b8cf12334b7b"
 	gfm["PSP Market"] = "a9ce0c5902b14e4891ed0fb6333a9e92"
 	gfm["PSP Product"] = "27555aec8d734b6889ae1836d7a67b4a"
@@ -161,8 +161,11 @@ func GetGuildFinMap() (gfm map[string]string) {
 
 func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek map[string]float64, guild string, acDate string, paymentDate string, pageID int, g *Guild) (incentiveRecords []dbSchema.Incentive) {
 	for contributor, amount := range contributorsAllTime {
-		if _, ok := g.nidToName[contributor]; !ok {
-			continue
+		notionName := contributor
+		if _, ok := g.nidToName[contributor]; ok {
+			notionName = g.nidToName[contributor]
+		} else if _, ok := g.notionidToName[contributor]; ok {
+			notionName = g.notionidToName[contributor]
 		}
 		if _, ok := contributorsThisWeek[contributor]; !ok {
 			continue
@@ -170,7 +173,7 @@ func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek
 		incentiveRecord := dbSchema.Incentive{
 			AccountingDate:  acDate,
 			Guild:           guild,
-			NotionName:      g.nidToName[contributor],
+			NotionName:      notionName,
 			NotionID:        contributor,
 			BuddyNotion:     g.notionidToName[g.nidToContributor[contributor].BuddyNotion],
 			TotalIncentive:  amount,
@@ -198,20 +201,22 @@ func CalTotalIncentive(data []dbSchema.Incentive, pageID int) (totalIncentiveRec
 		} else {
 			pageID++
 			contributorMap[incentive.NotionID] = &dbSchema.TotalIncentive{
-				ID:                fmt.Sprintf("%d", pageID),
-				AccountingDate:    incentive.AccountingDate,
-				NotionID:          incentive.NotionID,
-				NotionName:        incentive.NotionName,
-				BuddyNotion:       incentive.BuddyNotion,
-				TotalIncentive:    incentive.TotalIncentive,
-				WeeklyIncentive:   incentive.WeeklyIncentive,
-				PaymentDate:       incentive.PaymentDate,
-				OnboardDate:       incentive.OnboardDate,
-				FirstContribution: incentive.FirstContribution,
+				ID:              fmt.Sprintf("%d", pageID),
+				AccountingDate:  incentive.AccountingDate,
+				NotionID:        incentive.NotionID,
+				NotionName:      incentive.NotionName,
+				BuddyNotion:     incentive.BuddyNotion,
+				TotalIncentive:  incentive.TotalIncentive,
+				WeeklyIncentive: incentive.WeeklyIncentive,
+				PaymentDate:     incentive.PaymentDate,
+				OnboardDate:     incentive.OnboardDate,
 			}
 		}
 	}
 	for _, totalIncentiveRecord := range contributorMap {
+		if totalIncentiveRecord.TotalIncentive == totalIncentiveRecord.WeeklyIncentive {
+			(*totalIncentiveRecord).FirstContribution = "Yes"
+		}
 		totalIncentiveRecords = append(totalIncentiveRecords, *totalIncentiveRecord)
 	}
 	return
