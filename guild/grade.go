@@ -191,7 +191,7 @@ func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek
 	return
 }
 
-func CalTotalIncentive(data []dbSchema.Incentive, pageID int) (totalIncentiveRecords []dbSchema.TotalIncentive) {
+func CalTotalIncentive(data []dbSchema.Incentive, hisdata map[string]map[string]float64, pageID int) (totalIncentiveRecords []dbSchema.TotalIncentive) {
 	contributorMap := map[string]*dbSchema.TotalIncentive{}
 	for _, incentive := range data {
 		if _, ok := contributorMap[incentive.NotionID]; ok {
@@ -200,13 +200,17 @@ func CalTotalIncentive(data []dbSchema.Incentive, pageID int) (totalIncentiveRec
 			(*totalIncentive).WeeklyIncentive += incentive.WeeklyIncentive
 		} else {
 			pageID++
+			totalIncentive := 0.0
+			if ti, ok := hisdata[incentive.PaymentDate]; ok {
+				totalIncentive = ti[incentive.NotionID]
+			}
 			contributorMap[incentive.NotionID] = &dbSchema.TotalIncentive{
 				ID:              fmt.Sprintf("%d", pageID),
 				AccountingDate:  incentive.AccountingDate,
 				NotionID:        incentive.NotionID,
 				NotionName:      incentive.NotionName,
 				BuddyNotion:     incentive.BuddyNotion,
-				TotalIncentive:  incentive.TotalIncentive,
+				TotalIncentive:  totalIncentive,
 				WeeklyIncentive: incentive.WeeklyIncentive,
 				PaymentDate:     incentive.PaymentDate,
 				OnboardDate:     incentive.OnboardDate,

@@ -241,10 +241,11 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateM
 	gfm := GetGuildFinMap()
 	startDate := "1970-01-01"
 	insert := []dbSchema.Incentive{}
-	pageId, err := g.db.GetLastID(outNid)
-	if err != nil {
-		pageId = 1
-	}
+	//pageId, err := g.db.GetLastID(outNid)
+	//if err != nil {
+	//	pageId = 1
+	//}
+	pageId := 0
 	paymentDateMap = map[string]int{}
 	for guild, nid := range gfm {
 		_, contributorsAllTime, _, err := g.StatBetweenFinanceGroupByCNID("", nid, startDate, now)
@@ -273,12 +274,13 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateM
 
 func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]int) (err error) {
 	incentiveData := []dbSchema.Incentive{}
+	historyIncentiveByDate := map[string]map[string]float64{}
 	for paymentDateStr, _ := range paymentDateMap {
-		paymentDate, err := notion.ParseDateTime(paymentDateStr)
-		if err != nil {
-			return err
+		paymentDate, err1 := notion.ParseDateTime(paymentDateStr)
+		if err1 != nil {
+			return err1
 		}
-		data, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+		data, err2 := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
 			And: []notion.DatabaseQueryFilter{
 				{
 					Property: "Payment Date",
@@ -290,13 +292,41 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 				},
 			},
 		})
+		if err2 != nil {
+			return err2
+		}
+		if len(data) != 0 {
+			historyIncentive := map[string]float64{}
+			hisdata, err3 := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+				And: []notion.DatabaseQueryFilter{
+					{
+						Property: "Payment Date",
+						DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+							Date: &notion.DatePropertyFilter{
+								Before: &paymentDate.Time,
+							},
+						},
+					},
+				},
+			})
+			if err3 != nil {
+				return err3
+			}
+			for _, d := range hisdata {
+				historyIncentive[d.NotionID] += d.WeeklyIncentive
+			}
+			historyIncentiveByDate[paymentDateStr] = historyIncentive
+		}
+
 		incentiveData = append(incentiveData, data...)
 	}
-	pageId, err := g.db.GetLastID(outNid)
-	if err != nil {
-		pageId = 1
-	}
-	insert := CalTotalIncentive(incentiveData, pageId)
+	//pageId, err := g.db.GetLastID(outNid)
+	//if err != nil {
+	//	pageId = 1
+	//}
+
+	pageId := 0
+	insert := CalTotalIncentive(incentiveData, historyIncentiveByDate, pageId)
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the incentive_weekly_guild page failed", "err", err)
