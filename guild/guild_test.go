@@ -46,7 +46,7 @@ func TestGuild_GenStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	paymentDate, _ := notion.ParseDateTime("2024-04-12")
+	paymentDate, _ := notion.ParseDateTime("2024-04-13")
 	data, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
