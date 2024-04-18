@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine
+FROM golang:1.21-alpine
 
 WORKDIR /go/src/app
 
@@ -8,9 +8,10 @@ COPY . .
 
 RUN go mod download
 # backend
-RUN go build -o dnotion ./start/main.go
+RUN go build -o dnotion ./run/service
 
-EXPOSE 3002
+# Copy config file
+COPY config/config.toml .
 
 # start up frontend
 CMD ["./dnotion"]
