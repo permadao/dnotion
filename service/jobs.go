@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -8,18 +9,25 @@ import (
 
 func (s *Service) runJobs() {
 	var err error
-	s.scheduler, err = gocron.NewScheduler(gocron.WithLocation(time.UTC))
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("using time zone (UTC + 8):", time.Now().In(loc))
+
+	s.scheduler, err = gocron.NewScheduler(gocron.WithLocation(loc))
 	if err != nil {
 		panic(err)
 	}
 
 	// job list
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 0, 0))),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 0, 0))),
 		gocron.NewTask(s.genGrade),
 	)
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 30, 0))),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 30, 0))),
 		gocron.NewTask(s.genGuilds),
 	)
 
