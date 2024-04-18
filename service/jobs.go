@@ -29,7 +29,7 @@ func (s *Service) runJobs() {
 	)
 	startHour := 0
 	intervalHours := 2
-	endHour := 24 // 假设我们想要在晚上10点结束
+	endHour := 24
 	for hour := startHour; hour <= endHour; hour += intervalHours {
 		s.scheduler.NewJob(
 			gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(uint(hour), 0, 0))),
@@ -85,13 +85,13 @@ func (s *Service) genPromotionsStat() {
 
 func (s *Service) genIncentiveStat() {
 	now := GetCurrentDate()
-	threeDaysAgo := GetPreviousDate(3)
+	daysAgo := GetPreviousDate(6)
 	//没有记录不执行
 	exist, err := s.guild.IsExistRecord(now)
 	if !exist || err != nil {
 		return
 	}
-	exist = s.guild.IsExistIncentiveStatRecord(threeDaysAgo)
+	exist = s.guild.IsExistIncentiveStatRecord(daysAgo)
 	if exist {
 		return
 	}
@@ -100,7 +100,7 @@ func (s *Service) genIncentiveStat() {
 		log.Error("GenIncentiveStat failed", "err", err)
 	}
 	if success {
-		err = s.guild.GenTotalIncentiveStat("46dc65c61cd94e43bdaeee7ed22f15d2", paymentDateMap)
+		err = s.guild.GenTotalIncentiveStat("04c301f8dc5448759c5919e618822854", paymentDateMap)
 		if err != nil {
 			log.Error("GenTotalIncentiveStat failed", "err", err)
 		}
