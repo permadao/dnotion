@@ -23,11 +23,11 @@ func (s *Service) runJobs() {
 
 	// job list
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 0, 0))),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 0, 0))),
 		gocron.NewTask(s.genGrade),
 	)
 	s.scheduler.NewJob(
-		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(1, 30, 0))),
+		gocron.WeeklyJob(1, gocron.NewWeekdays(time.Saturday), gocron.NewAtTimes(gocron.NewAtTime(4, 30, 0))),
 		gocron.NewTask(s.genGuilds),
 	)
 
