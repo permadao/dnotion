@@ -32,6 +32,7 @@ type TotalIncentive struct {
 	PaymentDate       string
 	OnboardDate       string
 	FirstContribution string
+	Medal             string
 }
 
 func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
@@ -281,6 +282,12 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 	if t.FirstContribution != "" {
 		props["First contribution"] = notion.DatabasePageProperty{
 			Select: &notion.SelectOptions{Name: t.FirstContribution},
+		}
+	}
+
+	if t.Medal != "" {
+		props["Medal"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: t.Medal},
 		}
 	}
 	return t.NID, &props

@@ -88,8 +88,8 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	startDate, _ := time.Parse("2006-01-02", "2023-12-08")
-	endDate, _ := time.Parse("2006-01-02", "2024-04-06")
+	startDate, _ := time.Parse("2006-01-02", "2024-04-12")
+	endDate, _ := time.Parse("2006-01-02", "2024-04-12")
 	for !startDate.After(endDate) {
 		startDateStr := startDate.Format("2006-01-02")
 		success, paydateMap, err := g.GenIncentiveStat("4c19704d927f4d52b2f030ebd1648ef3", startDateStr)
