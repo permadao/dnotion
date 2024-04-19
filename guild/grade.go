@@ -145,6 +145,87 @@ func CalculateRewardPool(entry, recordNum float64) float64 {
 	return constant * math.Pow(entry, entryW) / (1 + math.Pow(entry/recordNum, pW))
 }
 
+func GetGuildFinMap() (gfm map[string]string) {
+	gfm = make(map[string]string)
+	gfm["Activity"] = "f2160eae42e9483882f01d3daa7090fa"
+	gfm["Promotion"] = "990db3313e42412b8c6ab07e399a2635"
+	gfm["Admin"] = "caac7a1aefcc4ed0b02b8adbc106f021"
+	gfm["Content"] = "328f2bfbfdbe4f9581af37f393893e36"
+	gfm["Translation"] = "e8d79c55c0394cba83664f3e5737b0bd"
+	gfm["Submission"] = "a815dcd96395424a93d9854b4418ab03"
+	gfm["Develop"] = "146e1f661ed943e3a460b8cf12334b7b"
+	gfm["PSP Market"] = "a9ce0c5902b14e4891ed0fb6333a9e92"
+	gfm["PSP Product"] = "27555aec8d734b6889ae1836d7a67b4a"
+	return
+}
+
+func GenStatRecords(contributorsAllTime map[string]float64, contributorsThisWeek map[string]float64, guild string, acDate string, paymentDate string, pageID int, g *Guild) (incentiveRecords []dbSchema.Incentive) {
+	for contributor, amount := range contributorsAllTime {
+		notionName := contributor
+		if _, ok := g.nidToName[contributor]; ok {
+			notionName = g.nidToName[contributor]
+		} else if _, ok := g.notionidToName[contributor]; ok {
+			notionName = g.notionidToName[contributor]
+		}
+		if _, ok := contributorsThisWeek[contributor]; !ok {
+			continue
+		}
+		incentiveRecord := dbSchema.Incentive{
+			AccountingDate:  acDate,
+			Guild:           guild,
+			NotionName:      notionName,
+			NotionID:        contributor,
+			BuddyNotion:     g.notionidToName[g.nidToContributor[contributor].BuddyNotion],
+			TotalIncentive:  amount,
+			WeeklyIncentive: contributorsThisWeek[contributor],
+			PaymentDate:     paymentDate,
+			OnboardDate:     g.nidToContributor[contributor].CreatedTime,
+		}
+		if incentiveRecord.TotalIncentive == incentiveRecord.WeeklyIncentive {
+			incentiveRecord.FirstContribution = "Yes"
+		}
+		pageID++
+		incentiveRecord.ID = fmt.Sprintf("%d", pageID)
+		incentiveRecords = append(incentiveRecords, incentiveRecord)
+	}
+	return
+}
+
+func CalTotalIncentive(data []dbSchema.Incentive, hisdata map[string]map[string]float64, pageID int) (totalIncentiveRecords []dbSchema.TotalIncentive) {
+	contributorMap := map[string]*dbSchema.TotalIncentive{}
+	for _, incentive := range data {
+		if _, ok := contributorMap[incentive.NotionID]; ok {
+			totalIncentive := contributorMap[incentive.NotionID]
+			(*totalIncentive).TotalIncentive += incentive.WeeklyIncentive
+			(*totalIncentive).WeeklyIncentive += incentive.WeeklyIncentive
+		} else {
+			pageID++
+			totalIncentive := 0.0
+			if ti, ok := hisdata[incentive.PaymentDate]; ok {
+				totalIncentive = ti[incentive.NotionID]
+			}
+			contributorMap[incentive.NotionID] = &dbSchema.TotalIncentive{
+				ID:              fmt.Sprintf("%d", pageID),
+				AccountingDate:  incentive.AccountingDate,
+				NotionID:        incentive.NotionID,
+				NotionName:      incentive.NotionName,
+				BuddyNotion:     incentive.BuddyNotion,
+				TotalIncentive:  totalIncentive + incentive.WeeklyIncentive,
+				WeeklyIncentive: incentive.WeeklyIncentive,
+				PaymentDate:     incentive.PaymentDate,
+				OnboardDate:     incentive.OnboardDate,
+			}
+		}
+	}
+	for _, totalIncentiveRecord := range contributorMap {
+		if totalIncentiveRecord.TotalIncentive == totalIncentiveRecord.WeeklyIncentive {
+			(*totalIncentiveRecord).FirstContribution = "Yes"
+		}
+		totalIncentiveRecords = append(totalIncentiveRecords, *totalIncentiveRecord)
+	}
+	return
+}
+
 func GDNewsLevel(income float64) (res string, code string) {
 	switch true {
 	case income >= 1600.0:
