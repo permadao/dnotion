@@ -1,5 +1,5 @@
 
-build_local:
+local:
 	go build -o ./build/dnotion ./run/service
 
 linux:
