@@ -339,7 +339,7 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 
 func (g *Guild) IsExistRecord(endDate string) (isExist bool, err error) {
 	parse, _ := time.Parse("2006-01-02", endDate)
-	startDate := parse.AddDate(0, 0, -3).Format("2006-01-02")
+	startDate := parse.AddDate(0, 0, -6).Format("2006-01-02")
 	start, err := notion.ParseDateTime(startDate)
 	if err != nil {
 		return
