@@ -88,8 +88,8 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	startDate, _ := time.Parse("2006-01-02", "2024-04-12")
-	endDate, _ := time.Parse("2006-01-02", "2024-04-12")
+	startDate, _ := time.Parse("2006-01-02", "2024-04-20")
+	endDate, _ := time.Parse("2006-01-02", "2024-04-20")
 	for !startDate.After(endDate) {
 		startDateStr := startDate.Format("2006-01-02")
 		success, paydateMap, err := g.GenIncentiveStat("4c19704d927f4d52b2f030ebd1648ef3", startDateStr)
@@ -106,5 +106,63 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 		fmt.Println("完成" + startDateStr)
 		startDate = startDate.AddDate(0, 0, 7)
 		fmt.Println("下一时间", startDate)
+	}
+}
+
+func TestUpdateTotalIncentiveStatData(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	paymentDate, _ := notion.ParseDateTime("2022-12-31")
+	data, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						After: &paymentDate.Time,
+					},
+				},
+			},
+		},
+	})
+	paydateMap := map[string]int{}
+	for _, d := range data {
+		paydateMap[d.PaymentDate]++
+	}
+	paydateSlice := []string{}
+	for k, _ := range paydateMap {
+		paydateSlice = append(paydateSlice, k)
+	}
+	sort.Slice(paydateSlice, func(i, j int) bool {
+		return paydateSlice[i] < paydateSlice[j]
+	})
+	for _, pd := range paydateSlice {
+		fmt.Println("准备开始", pd)
+		paymentDate, _ := notion.ParseDateTime(pd)
+		d, _ := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
+			And: []notion.DatabaseQueryFilter{
+				{
+					Property: "Payment Date",
+					DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+						Date: &notion.DatePropertyFilter{
+							Equals: &paymentDate.Time,
+						},
+					},
+				},
+			},
+		})
+		for _, ti := range d {
+			if ti.Medal == "" && GDMedal(ti.TotalIncentive-ti.WeeklyIncentive, ti.TotalIncentive) != "" {
+				fmt.Println("待修补数据", ti)
+				ti.Medal = GDMedal(ti.TotalIncentive-ti.WeeklyIncentive, ti.TotalIncentive)
+				err := g.db.UpdatePage(&ti)
+				if err != nil {
+					fmt.Println("异常->", err)
+					return
+				}
+			}
+		}
+		fmt.Println("完成", pd)
 	}
 }

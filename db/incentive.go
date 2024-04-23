@@ -31,3 +31,30 @@ func NewIncentiveDataFromProps(nid string, props notion.DatabasePageProperties) 
 	data.DeserializePropertys(nid, props)
 	return data
 }
+
+func (d *DB) GetTotalIncentiveData(filter *notion.DatabaseQueryFilter) ([]schema.TotalIncentive, error) {
+	nid := "04c301f8dc5448759c5919e618822854"
+	pages, err := d.GetPages(nid, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	data := []schema.TotalIncentive{}
+	for _, page := range pages {
+		d := NewTotalIncentiveDataFromPage(page)
+		data = append(data, *d)
+	}
+
+	return data, nil
+}
+
+func NewTotalIncentiveDataFromPage(page notion.Page) *schema.TotalIncentive {
+	props := page.Properties.(notion.DatabasePageProperties)
+	return NewTotalIncentiveDataFromProps(page.ID, props)
+}
+
+func NewTotalIncentiveDataFromProps(nid string, props notion.DatabasePageProperties) *schema.TotalIncentive {
+	data := &schema.TotalIncentive{}
+	data.DeserializePropertys(nid, props)
+	return data
+}
