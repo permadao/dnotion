@@ -32,6 +32,7 @@ type TotalIncentive struct {
 	PaymentDate       string
 	OnboardDate       string
 	FirstContribution string
+	Medal             string
 }
 
 func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
@@ -180,7 +181,40 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 }
 
 func (t *TotalIncentive) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
-
+	t.NID = nid
+	if len(props["ID"].Title) > 0 {
+		t.ID = props["ID"].Title[0].Text.Content
+	}
+	if props["Accounting Date"].Date != nil {
+		t.AccountingDate = props["Accounting Date"].Date.Start.Format("2006-01-02")
+	}
+	if len(props["Notion ID"].Title) > 0 {
+		t.NotionID = props["Notion ID"].Title[0].Text.Content
+	}
+	if len(props["Notion Name"].RichText) > 0 {
+		t.NotionName = props["Notion Name"].RichText[0].PlainText
+	}
+	if len(props["Buddy Notion"].RichText) > 0 {
+		t.BuddyNotion = props["Buddy Notion"].RichText[0].PlainText
+	}
+	if props["Total Incentive"].Number != nil {
+		t.TotalIncentive = *props["Total Incentive"].Number
+	}
+	if props["Weekly Incentive"].Number != nil {
+		t.WeeklyIncentive = *props["Weekly Incentive"].Number
+	}
+	if props["Payment Date"].Date != nil {
+		t.PaymentDate = props["Payment Date"].Date.Start.Format("2006-01-02")
+	}
+	if props["Onboard Date"].Date != nil {
+		t.OnboardDate = props["Onboard Date"].Date.Start.Format("2006-01-02")
+	}
+	if props["First contribution"].Select != nil {
+		t.FirstContribution = props["First contribution"].Select.Name
+	}
+	if props["Medal"].Select != nil {
+		t.Medal = props["Medal"].Select.Name
+	}
 }
 
 func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.DatabasePageProperties) {
@@ -281,6 +315,12 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 	if t.FirstContribution != "" {
 		props["First contribution"] = notion.DatabasePageProperty{
 			Select: &notion.SelectOptions{Name: t.FirstContribution},
+		}
+	}
+
+	if t.Medal != "" {
+		props["Medal"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: t.Medal},
 		}
 	}
 	return t.NID, &props

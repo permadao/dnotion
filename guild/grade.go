@@ -221,6 +221,7 @@ func CalTotalIncentive(data []dbSchema.Incentive, hisdata map[string]map[string]
 		if totalIncentiveRecord.TotalIncentive == totalIncentiveRecord.WeeklyIncentive {
 			(*totalIncentiveRecord).FirstContribution = "Yes"
 		}
+		(*totalIncentiveRecord).Medal = GDMedal(totalIncentiveRecord.TotalIncentive-totalIncentiveRecord.WeeklyIncentive, totalIncentiveRecord.TotalIncentive)
 		totalIncentiveRecords = append(totalIncentiveRecords, *totalIncentiveRecord)
 	}
 	return
@@ -252,6 +253,24 @@ func GDNewsLevel(income float64) (res string, code string) {
 		{
 			res = "普通作者"
 			code = "normal"
+		}
+	}
+	return
+}
+
+func GDMedal(hisIncentive, curIncentive float64) (medal string) {
+	switch true {
+	case hisIncentive < 200 && curIncentive >= 200:
+		{
+			medal = "达成200"
+		}
+	case hisIncentive < 50 && curIncentive >= 50:
+		{
+			medal = "达成50"
+		}
+	default:
+		{
+			medal = ""
 		}
 	}
 	return
