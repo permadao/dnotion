@@ -115,13 +115,21 @@ func (s *Service) genIncentiveStat() {
 	}
 }
 func GetCurrentDate() (date string) {
-	now := time.Now()
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		panic(err)
+	}
+	now := time.Now().In(loc)
 	date = now.Format("2006-01-02")
 	return
 }
 
 func GetPreviousDate(days int) (date string) {
-	now := time.Now()
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		panic(err)
+	}
+	now := time.Now().In(loc)
 	last := now.AddDate(0, 0, -days)
 	date = last.Format("2006-01-02")
 	return
