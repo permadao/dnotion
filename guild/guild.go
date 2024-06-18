@@ -1,13 +1,14 @@
 package guild
 
 import (
+	"time"
+
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
 	dbSchema "github.com/permadao/dnotion/db/schema"
 	"github.com/permadao/dnotion/guild/schema"
 	"github.com/permadao/dnotion/logger"
-	"time"
 )
 
 var log = logger.New("guild")
@@ -34,11 +35,11 @@ func New(conf *config.Config, db *db.DB) *Guild {
 		nidToContributor: map[string]dbSchema.ContributorData{},
 	}
 
-	g.initContributors()
+	g.LoadContributors()
 	return g
 }
 
-func (g *Guild) initContributors() {
+func (g *Guild) LoadContributors() {
 	contributors, err := g.db.GetContributors(nil)
 	if err != nil {
 		panic(err)
