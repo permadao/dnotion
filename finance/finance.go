@@ -2,6 +2,7 @@ package finance
 
 import (
 	"github.com/everFinance/goether"
+	"github.com/everVision/everpay-kits/schema"
 	"github.com/everVision/everpay-kits/sdk"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
@@ -20,7 +21,9 @@ type Finance struct {
 	// contributors
 	uidToNid    map[string]string //  userid -> contributors page notion id
 	nidToWallet map[string]string //  contributors page notion id -> wallet
-	tokenTagMap map[string]string //  token tags
+
+	// tokens
+	tokens map[string]schema.TokenInfo // token symbol -> token info
 }
 
 func New(conf *config.Config, db *db.DB) *Finance {
@@ -41,14 +44,12 @@ func New(conf *config.Config, db *db.DB) *Finance {
 
 		uidToNid:    make(map[string]string),
 		nidToWallet: make(map[string]string),
-		tokenTagMap: map[string]string{
-			"AR":   "arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543",
-			"BP":   "aostest-bp-_HbnZH5blAZH0CNT1k_dpRrGXWCzBg34hjMUkoDrXr0",
-			"USDC": "ethereum-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-		},
+
+		tokens: make(map[string]schema.TokenInfo),
 	}
 
 	fin.initContributors()
+	fin.initTokens()
 	return fin
 }
 
@@ -61,5 +62,11 @@ func (f *Finance) initContributors() {
 	for _, c := range contributors {
 		f.uidToNid[c.NotionID] = c.NID
 		f.nidToWallet[c.NID] = c.Wallet
+	}
+}
+
+func (f *Finance) initTokens() {
+	for _, t := range f.everpay.Info.TokenList {
+		f.tokens[t.Symbol] = t
 	}
 }
