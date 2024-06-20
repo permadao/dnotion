@@ -62,7 +62,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 		}
 
 		// get token tag
-		token_tag, ok := Token_Tag_Map[finData.TargetToken]
+		tokenTag, ok := tokenTagMap[finData.TargetToken]
 		if !ok {
 			msg := fmt.Sprintf("Target token not exist: %s ; nid/id: %v/%v", finData.TargetToken, fnid, page.ID)
 			log.Error(msg)
@@ -81,7 +81,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 
 		// payment
 		tx, err := f.everpay.Transfer(
-			token_tag,
+			tokenTag,
 			utils.FloatToBigInt(token),
 			wallet,
 			`{"appName": "`+"dnotion"+`", "permadaoUrl": "`+page.URL+`"}`)
