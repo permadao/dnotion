@@ -2,6 +2,7 @@ package finance
 
 import (
 	"github.com/everFinance/goether"
+	"github.com/everVision/everpay-kits/schema"
 	"github.com/everVision/everpay-kits/sdk"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
@@ -20,6 +21,9 @@ type Finance struct {
 	// contributors
 	uidToNid    map[string]string //  userid -> contributors page notion id
 	nidToWallet map[string]string //  contributors page notion id -> wallet
+
+	// tokens
+	tokens map[string]schema.TokenInfo // token symbol -> token info
 }
 
 func New(conf *config.Config, db *db.DB) *Finance {
@@ -40,9 +44,12 @@ func New(conf *config.Config, db *db.DB) *Finance {
 
 		uidToNid:    make(map[string]string),
 		nidToWallet: make(map[string]string),
+
+		tokens: make(map[string]schema.TokenInfo),
 	}
 
 	fin.initContributors()
+	fin.initTokens()
 	return fin
 }
 
@@ -55,5 +62,11 @@ func (f *Finance) initContributors() {
 	for _, c := range contributors {
 		f.uidToNid[c.NotionID] = c.NID
 		f.nidToWallet[c.NID] = c.Wallet
+	}
+}
+
+func (f *Finance) initTokens() {
+	for _, t := range f.everpay.Info.TokenList {
+		f.tokens[t.Symbol] = t
 	}
 }

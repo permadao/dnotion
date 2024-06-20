@@ -46,7 +46,6 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 	for _, page := range pages {
 		// get wallet and amount
 		finData := db.NewFinDataFromPage(page)
-		token := finData.TargetAmount
 
 		wallet := ""
 		if finData.Contributor != "" {
@@ -56,6 +55,15 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 		}
 		if wallet == "" {
 			msg := fmt.Sprintf("Contributor not found, nid/id: %v/%v", fnid, page.ID)
+			log.Error(msg)
+			errs = append(errs, msg)
+			continue
+		}
+
+		// get token info
+		tokenInfo, ok := f.tokens[finData.TargetToken]
+		if !ok {
+			msg := fmt.Sprintf("Target token not exist: %s ; nid/id: %v/%v", finData.TargetToken, fnid, page.ID)
 			log.Error(msg)
 			errs = append(errs, msg)
 			continue
@@ -72,8 +80,9 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 
 		// payment
 		tx, err := f.everpay.Transfer(
-			"arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543",
-			utils.FloatToBigInt(token), wallet,
+			tokenInfo.Tag,
+			utils.FloatToBigInt(finData.TargetAmount, tokenInfo.Decimals),
+			wallet,
 			`{"appName": "`+"dnotion"+`", "permadaoUrl": "`+page.URL+`"}`)
 		if err != nil {
 			msg := fmt.Sprintf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
