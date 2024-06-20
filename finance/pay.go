@@ -62,7 +62,7 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 		}
 
 		// get token tag
-		tokenTag, ok := tokenTagMap[finData.TargetToken]
+		tokenTag, ok := f.tokenTagMap[finData.TargetToken]
 		if !ok {
 			msg := fmt.Sprintf("Target token not exist: %s ; nid/id: %v/%v", finData.TargetToken, fnid, page.ID)
 			log.Error(msg)
