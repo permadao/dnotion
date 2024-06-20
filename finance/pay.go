@@ -61,6 +61,15 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 			continue
 		}
 
+		// get token tag
+		token_tag, ok := Token_Tag_Map[finData.TargetToken]
+		if !ok {
+			msg := fmt.Sprintf("Target token not exist: %s ; nid/id: %v/%v", finData.TargetToken, fnid, page.ID)
+			log.Error(msg)
+			errs = append(errs, msg)
+			continue
+		}
+
 		// update to done
 		finData.Status = schema.StatusDone
 		if err := f.db.UpdatePage(finData); err != nil {
@@ -72,8 +81,9 @@ func (f *Finance) Pay(fnid string) (errs []string) {
 
 		// payment
 		tx, err := f.everpay.Transfer(
-			"arweave,ethereum-ar-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,0x4fadc7a98f2dc96510e42dd1a74141eeae0c1543",
-			utils.FloatToBigInt(token), wallet,
+			token_tag,
+			utils.FloatToBigInt(token),
+			wallet,
 			`{"appName": "`+"dnotion"+`", "permadaoUrl": "`+page.URL+`"}`)
 		if err != nil {
 			msg := fmt.Sprintf("Payment failed nid/id: %v/%v. %v", fnid, page.ID, err)
