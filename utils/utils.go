@@ -1,15 +1,13 @@
 package utils
 
-import "math/big"
+import (
+	"fmt"
+	"math/big"
+)
 
-func FloatToBigInt(val float64) *big.Int {
-	bigval := new(big.Float)
-	bigval.SetFloat64(val)
-
-	coin := new(big.Float)
-	coin.SetInt(big.NewInt(1000000000000))
-
-	bigval.Mul(bigval, coin)
+func FloatToBigInt(val float64, decimals int) *big.Int {
+	bigval := new(big.Float).SetFloat64(val)
+	bigval.SetString(fmt.Sprintf("%fE%d", val, decimals))
 
 	result := new(big.Int)
 	bigval.Int(result)

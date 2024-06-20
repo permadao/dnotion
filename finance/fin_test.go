@@ -1,6 +1,8 @@
 package finance
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDNotion(t *testing.T) {
 	// dao := New(
@@ -60,4 +62,11 @@ func TestDNotion(t *testing.T) {
 	// // 5. process payment by everpay
 	// dao.PayAll()
 	// dao.Pay("0c8f5483e1344d919e5e5a49d6d8dabb")
+}
+
+func TestEverPayToken(t *testing.T) {
+	// config := config.New("./config.toml")
+	// db := db.New(config)
+	// fin := New(config, db)
+	// fmt.Printf("%+v", fin.tokens)
 }
