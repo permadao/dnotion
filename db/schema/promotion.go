@@ -72,8 +72,8 @@ func (p *PromotionPoints) DeserializePropertys(nid string, props notion.Database
 	if len(props["Contributor"].People) > 0 {
 		p.Contributor = props["Contributor"].People[0].BaseUser.ID
 	}
-	if props["Base Points"].Rollup != nil {
-		p.BasePoints = *props["Base Points"].Rollup.Number
+	if len(props["BP"].Rollup.Array) > 0 {
+		p.BasePoints = *props["BP"].Rollup.Array[0].Number
 	}
 	if len(props["Task"].Relation) > 0 {
 		p.Task = props["Task"].Relation[0].ID
