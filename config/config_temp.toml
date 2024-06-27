@@ -33,6 +33,7 @@ appname = "dnotion"
 		"4c4d512c4c9e4e09b951967752f185ea", # dev
 		"179790222580482f9e691ab6618f473e", # psp market
 		"8cd2d839823a42daa1c8ae5b104c67c7", # psp prod
+		"ef2043f45b0144ec846f69cd035c1224", # meeting
     ]
     # finance db
     finance_dbs = [
@@ -46,6 +47,7 @@ appname = "dnotion"
 		"146e1f661ed943e3a460b8cf12334b7b", # dev
 		"a9ce0c5902b14e4891ed0fb6333a9e92", # psp market
 		"27555aec8d734b6889ae1836d7a67b4a", # psp prod
+		"0c8f5483e1344d919e5e5a49d6d8dabb", # meeting
     ]
 
 # everpay
