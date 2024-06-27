@@ -53,7 +53,7 @@ func (f *Finance) UpdateWorkToFin(workNid, finNid string) (errlogs []string) {
 		}
 		wpagep := wpage.Properties.(notion.DatabasePageProperties)
 		workloadData := db.NewWrokloadDataFromProps(wpage.ID, &wpagep)
-		wusd := workloadData.Usd
+		wusd := workloadData.Amount
 
 		// generate DatabasePageProperties
 		dpp := schema.FinData{}

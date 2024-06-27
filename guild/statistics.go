@@ -288,7 +288,7 @@ func (g *Guild) statNewsFinance(fins []dbSchema.NewsFinData, startDate string) (
 	aggrContributorsForAllDay = map[string]float64{}  // contributors id -> sum of rewards
 
 	for _, fin := range fins {
-		totalAmount += fin.USD
+		totalAmount += fin.Amount
 
 		if fin.Contributor == "" {
 			continue
@@ -296,15 +296,15 @@ func (g *Guild) statNewsFinance(fins []dbSchema.NewsFinData, startDate string) (
 		createDate := fin.CreatedTime
 		if createDate >= startDate {
 			if c, ok := aggrContributorsFor15weeks[fin.Contributor]; ok {
-				aggrContributorsFor15weeks[fin.Contributor] = c + fin.USD
+				aggrContributorsFor15weeks[fin.Contributor] = c + fin.Amount
 			} else {
-				aggrContributorsFor15weeks[fin.Contributor] = fin.USD
+				aggrContributorsFor15weeks[fin.Contributor] = fin.Amount
 			}
 		}
 		if c, ok := aggrContributorsForAllDay[fin.Contributor]; ok {
-			aggrContributorsForAllDay[fin.Contributor] = c + fin.USD
+			aggrContributorsForAllDay[fin.Contributor] = c + fin.Amount
 		} else {
-			aggrContributorsForAllDay[fin.Contributor] = fin.USD
+			aggrContributorsForAllDay[fin.Contributor] = fin.Amount
 		}
 	}
 

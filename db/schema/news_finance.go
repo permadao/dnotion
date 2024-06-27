@@ -7,19 +7,18 @@ import (
 )
 
 type NewsFinData struct {
-	NID            string // notion id for update
-	ID             string
-	CreatedTime    string
-	TaskStatus     string
-	Contributor    string
-	ContributorRank     string
-	USD            float64
+	NID             string // notion id for update
+	ID              string
+	CreatedTime     string
+	TaskStatus      string
+	Contributor     string
+	ContributorRank string
+	Amount          float64
 }
 
 func (f *NewsFinData) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
 	f.NID = nid
-	  
-	 
+
 	// fmt.Println( props["Task Status"] )
 	// fmt.Println( props["Contributor_rank"] )
 	if len(props["ID"].Title) > 0 {
@@ -34,11 +33,11 @@ func (f *NewsFinData) DeserializePropertys(nid string, props notion.DatabasePage
 	if len(props["Contributor"].People) > 0 {
 		f.Contributor = props["Contributor"].People[0].BaseUser.ID
 	}
-	if len( props["Contributor_rank"].Relation) >0 {
+	if len(props["Contributor_rank"].Relation) > 0 {
 		f.ContributorRank = props["Contributor_rank"].Relation[0].ID
 	}
-	if props["USD"].Number != nil {
-		f.USD = *props["USD"].Number
+	if props["Amount"].Number != nil {
+		f.Amount = *props["Amount"].Number
 	}
 	// fmt.Println(f)
 }
@@ -85,8 +84,7 @@ func (f *NewsFinData) SerializePropertys() (nid string, nprops *notion.DatabaseP
 			},
 		}
 	}
-	
-	
+
 	if f.ContributorRank != "" {
 		props["Contributor_rank"] = notion.DatabasePageProperty{
 			Relation: []notion.Relation{
@@ -95,9 +93,9 @@ func (f *NewsFinData) SerializePropertys() (nid string, nprops *notion.DatabaseP
 		}
 	}
 
-	if f.USD != 0 {
-		props["USD"] = notion.DatabasePageProperty{
-			Number: &f.USD,
+	if f.Amount != 0 {
+		props["Amount"] = notion.DatabasePageProperty{
+			Number: &f.Amount,
 		}
 	}
 	return f.NID, &props

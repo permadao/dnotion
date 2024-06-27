@@ -82,14 +82,14 @@ func (f *Finance) CheckWorkloadAndAmount(fnid, wnid string) (errlogs []string) {
 		}
 
 		workloadUSD := 0.0
-		switch wp["USD"].Type {
+		switch wp["Amount"].Type {
 		case notion.DBPropTypeFormula:
-			if wp["USD"].Formula != nil {
-				workloadUSD = *wp["USD"].Formula.Number
+			if wp["Amount"].Formula != nil {
+				workloadUSD = *wp["Amount"].Formula.Number
 			}
 		case notion.DBPropTypeNumber:
-			if wp["USD"].Number != nil {
-				workloadUSD = *wp["USD"].Number
+			if wp["Amount"].Number != nil {
+				workloadUSD = *wp["Amount"].Number
 			}
 		}
 		workToUSD[page.ID] = workloadUSD
