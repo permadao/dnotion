@@ -3,15 +3,16 @@ package schema
 import "github.com/dstotijn/go-notion"
 
 type WorkloadData struct {
-	NID            string
-	ID             string
-	Status         string
-	TaskStatus     string
-	Name           string
-	Note           string
-	Usd            float64 // usd amount except translation guide
-	TranslattonUsd float64 // !! usd amount for translation guide
-	Contributor    string
+	NID        string
+	ID         string
+	Status     string
+	TaskStatus string
+	Name       string
+	Note       string
+	Amount     float64 // usd amount except translation guide
+	// TranslationAmount float64 // !! usd amount for translation guide -- Deprecated, remove at 2024.6.27 by webb
+	Contributor string
+	Token       string
 }
 
 func (f *WorkloadData) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
@@ -31,13 +32,18 @@ func (f *WorkloadData) DeserializePropertys(nid string, props notion.DatabasePag
 	if len(props["Note"].RichText) > 0 {
 		f.Note = props["Note"].RichText[0].Text.Content
 	}
-	if props["USD"].Number != nil {
-		f.Usd = *props["USD"].Number
-	} else if props["USD"].Formula != nil {
-		f.TranslattonUsd = *props["USD"].Formula.Number
+	if props["Amount"].Number != nil {
+		f.Amount = *props["Amount"].Number
 	}
+	// -- remove at 2024.6.27 by webb
+	// else if props["Amount"].Formula != nil {
+	// 	f.TranslationAmount = *props["Amount"].Formula.Number
+	// }
 	if len(props["Contributor"].People) > 0 {
 		f.Contributor = props["Contributor"].People[0].BaseUser.ID
+	}
+	if props["Token"].Select != nil {
+		f.Token = props["Token"].Select.Name
 	}
 }
 
@@ -90,17 +96,19 @@ func (f *WorkloadData) SerializePropertys() (nid string, nprops *notion.Database
 			},
 		}
 	}
-	if f.Usd != 0 {
-		props["USD"] = notion.DatabasePageProperty{
-			Number: &f.Usd,
-		}
-	} else if f.TranslattonUsd != 0 {
-		props["USD"] = notion.DatabasePageProperty{
-			Formula: &notion.FormulaResult{
-				Number: &f.TranslattonUsd,
-			},
+	if f.Amount != 0 {
+		props["Amount"] = notion.DatabasePageProperty{
+			Number: &f.Amount,
 		}
 	}
+	// -- remove at 2024.6.27 by webb
+	// else if f.TranslationAmount != 0 {
+	// 	props["Amount"] = notion.DatabasePageProperty{
+	// 		Formula: &notion.FormulaResult{
+	// 			Number: &f.TranslationAmount,
+	// 		},
+	// 	}
+	// }
 	if f.Contributor != "" {
 		props["Contributor"] = notion.DatabasePageProperty{
 			People: []notion.User{
@@ -108,6 +116,11 @@ func (f *WorkloadData) SerializePropertys() (nid string, nprops *notion.Database
 					BaseUser: notion.BaseUser{ID: f.Contributor},
 				},
 			},
+		}
+	}
+	if f.Token != "" {
+		props["Token"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: f.Token},
 		}
 	}
 	return f.NID, &props
