@@ -67,6 +67,13 @@ func (f *Finance) initContributors() {
 
 func (f *Finance) initTokens() {
 	for _, t := range f.everpay.Info.TokenList {
+
+		// Notice: We use Arweave AR, not use aostest AR now, filter aostest AR
+		if t.Symbol == "AR" && t.ChainType == "aostest" {
+			continue
+		}
+
 		f.tokens[t.Symbol] = t
 	}
+
 }
