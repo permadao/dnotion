@@ -18,6 +18,7 @@ type Incentive struct {
 	PaymentDate       string
 	OnboardDate       string
 	FirstContribution string
+	Token             string
 }
 
 type TotalIncentive struct {
@@ -33,6 +34,7 @@ type TotalIncentive struct {
 	OnboardDate       string
 	FirstContribution string
 	Medal             string
+	Token             string
 }
 
 func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePageProperties) {
@@ -69,6 +71,9 @@ func (i *Incentive) DeserializePropertys(nid string, props notion.DatabasePagePr
 	}
 	if props["First contribution"].Select != nil {
 		i.FirstContribution = props["First contribution"].Select.Name
+	}
+	if props["Token"].Select != nil {
+		i.Token = props["Token"].Select.Name
 	}
 }
 
@@ -177,6 +182,12 @@ func (i *Incentive) SerializePropertys() (nid string, nprops *notion.DatabasePag
 			Select: &notion.SelectOptions{Name: i.FirstContribution},
 		}
 	}
+	if i.Token != "" {
+		props["Token"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: i.Token},
+		}
+	}
+
 	return i.NID, &props
 }
 
@@ -214,6 +225,9 @@ func (t *TotalIncentive) DeserializePropertys(nid string, props notion.DatabaseP
 	}
 	if props["Medal"].Select != nil {
 		t.Medal = props["Medal"].Select.Name
+	}
+	if props["Token"].Select != nil {
+		t.Token = props["Token"].Select.Name
 	}
 }
 
@@ -321,6 +335,11 @@ func (t *TotalIncentive) SerializePropertys() (nid string, nprops *notion.Databa
 	if t.Medal != "" {
 		props["Medal"] = notion.DatabasePageProperty{
 			Select: &notion.SelectOptions{Name: t.Medal},
+		}
+	}
+	if t.Token != "" {
+		props["Token"] = notion.DatabasePageProperty{
+			Select: &notion.SelectOptions{Name: t.Token},
 		}
 	}
 	return t.NID, &props

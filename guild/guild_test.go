@@ -5,7 +5,9 @@ import (
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/config"
 	"github.com/permadao/dnotion/db"
+	"github.com/permadao/dnotion/utils"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 )
@@ -88,32 +90,33 @@ func TestGuild_GenTotalIncentiveStatRecords(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	startDate, _ := time.Parse("2006-01-02", "2024-06-01")
-	endDate, _ := time.Parse("2006-01-02", "2024-06-01")
+	startDate, _ := time.Parse("2006-01-02", "2024-06-22")
+	endDate, _ := time.Parse("2006-01-02", "2024-07-27")
 	for !startDate.After(endDate) {
 		startDateStr := startDate.Format("2006-01-02")
-		success, paydateMap, err := g.GenIncentiveStat("4c19704d927f4d52b2f030ebd1648ef3", startDateStr)
+		success, _, err := g.GenIncentiveStat(utils.CincentiveWeeklyGuildRs, startDateStr)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(paydateMap)
-		if success {
-			err := g.GenTotalIncentiveStat("04c301f8dc5448759c5919e618822854", paydateMap)
-			if err != nil {
-				return
-			}
-		}
-		fmt.Println("完成" + startDateStr)
+		//fmt.Println(paydateMap)
+		//if success {
+		//	err := g.GenTotalIncentiveStat(utils.CincentiveWeeklyRs, paydateMap)
+		//	if err != nil {
+		//		return
+		//	}
+		//}
+		//fmt.Println("完成" + startDateStr)
+		fmt.Printf("时间%v 结果%v \r\n", startDateStr, success)
 		startDate = startDate.AddDate(0, 0, 7)
 		fmt.Println("下一时间", startDate)
 	}
 }
 
-func TestUpdateTotalIncentiveStatData(t *testing.T) {
+func TestGuild_GenTotalIncentiveStatRecords2(t *testing.T) {
 	c := config.New("config_temp")
 	d := db.New(c)
 	g := New(c, d)
-	paymentDate, _ := notion.ParseDateTime("2022-12-31")
+	paymentDate, _ := notion.ParseDateTime("2024-06-20")
 	data, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
@@ -138,31 +141,273 @@ func TestUpdateTotalIncentiveStatData(t *testing.T) {
 		return paydateSlice[i] < paydateSlice[j]
 	})
 	for _, pd := range paydateSlice {
-		fmt.Println("准备开始", pd)
-		paymentDate, _ := notion.ParseDateTime(pd)
-		d, _ := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
-			And: []notion.DatabaseQueryFilter{
-				{
-					Property: "Payment Date",
-					DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-						Date: &notion.DatePropertyFilter{
-							Equals: &paymentDate.Time,
-						},
+		pm := map[string]int{}
+		pm[pd] = 1
+		err := g.GenTotalIncentiveStat(utils.CincentiveWeeklyRs, pm)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(pd + "完成")
+	}
+}
+
+func TestGuild_GenIncentiveStat(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	startDate, _ := time.Parse("2006-01-02", "2024-07-06")
+	startDateStr := startDate.Format("2006-01-02")
+	success, paydateMap, _ := g.GenIncentiveStat(utils.CincentiveWeeklyGuildRs, startDateStr)
+	fmt.Println(success)
+	fmt.Println(paydateMap)
+}
+
+func TestGuild_GenTotalIncentiveStat(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	pm := map[string]int{}
+	pm["2024-06-21"] = 1
+	err := g.GenTotalIncentiveStat(utils.CincentiveWeeklyRs, pm)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(pm)
+	}
+}
+
+// 修复没有Token的数据
+func TestUpdateTotalIncentiveStatData(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	startDate, acDate := "2022-12-31", "2024-06-20"
+	start, _ := notion.ParseDateTime(startDate)
+	end, _ := notion.ParseDateTime(acDate)
+	records, _ := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &start.Time,
 					},
 				},
 			},
-		})
-		for _, ti := range d {
-			if ti.Medal == "" && GDMedal(ti.TotalIncentive-ti.WeeklyIncentive, ti.TotalIncentive) != "" {
-				fmt.Println("待修补数据", ti)
-				ti.Medal = GDMedal(ti.TotalIncentive-ti.WeeklyIncentive, ti.TotalIncentive)
-				err := g.db.UpdatePage(&ti)
-				if err != nil {
-					fmt.Println("异常->", err)
-					return
+			{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrBefore: &end.Time,
+					},
+				},
+			},
+			{
+				Property: "Token",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Select: &notion.SelectDatabaseQueryFilter{
+						IsEmpty: true,
+					},
+				},
+			},
+		},
+	})
+	payDateMap := map[string]int{}
+	for _, d := range records {
+		payDateMap[d.PaymentDate]++
+	}
+	payDateSlice := []string{}
+	for k, _ := range payDateMap {
+		payDateSlice = append(payDateSlice, k)
+	}
+	sort.Slice(payDateSlice, func(i, j int) bool {
+		return payDateSlice[i] < payDateSlice[j]
+	})
+
+	handle := &Handle{
+		WorkerPoolSize: 5,
+		TaskQueue:      make([]chan string, 5),
+		Func: func(pd string, wg *sync.WaitGroup) bool {
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Println(err)
+				}
+			}()
+			fmt.Println("准备开始", pd)
+			paymentDate, _ := notion.ParseDateTime(pd)
+			d, _ := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
+				And: []notion.DatabaseQueryFilter{
+					{
+						Property: "Payment Date",
+						DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+							Date: &notion.DatePropertyFilter{
+								Equals: &paymentDate.Time,
+							},
+						},
+					},
+				},
+			})
+			for _, ti := range d {
+				if ti.Token == "" {
+					ti.Token = "USD"
+					err := g.db.UpdatePage(&ti)
+					if err != nil {
+						fmt.Println("异常->", err)
+						return false
+					}
 				}
 			}
-		}
-		fmt.Println("完成", pd)
+			fmt.Println("完成", pd)
+			return true
+		},
+		mux: sync.Mutex{},
+		wg:  sync.WaitGroup{},
 	}
+	handle.StartWorkerPool()
+	for i, pd := range payDateSlice {
+		handle.wg.Add(1)
+		handle.SendMsgToTaskQueue(i%int(handle.WorkerPoolSize), pd)
+	}
+	fmt.Println("等待完成----")
+	handle.wg.Wait()
+	result := handle.TaskResult
+	sort.Strings(result)
+	fmt.Println("失败的天->", result)
+}
+
+// 修复没有Token的数据
+func TestUpdateIncentiveStatData(t *testing.T) {
+	c := config.New("config_temp")
+	d := db.New(c)
+	g := New(c, d)
+	startDate, acDate := "2022-12-31", "2024-06-20"
+	start, _ := notion.ParseDateTime(startDate)
+	end, _ := notion.ParseDateTime(acDate)
+	records, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+		And: []notion.DatabaseQueryFilter{
+			{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrAfter: &start.Time,
+					},
+				},
+			},
+			{
+				Property: "Payment Date",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Date: &notion.DatePropertyFilter{
+						OnOrBefore: &end.Time,
+					},
+				},
+			},
+			{
+				Property: "Token",
+				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+					Select: &notion.SelectDatabaseQueryFilter{
+						IsEmpty: true,
+					},
+				},
+			},
+		},
+	})
+	payDateMap := map[string]int{}
+	for _, d := range records {
+		payDateMap[d.PaymentDate]++
+	}
+	payDateSlice := []string{}
+	for k, _ := range payDateMap {
+		payDateSlice = append(payDateSlice, k)
+	}
+	sort.Slice(payDateSlice, func(i, j int) bool {
+		return payDateSlice[i] < payDateSlice[j]
+	})
+
+	handle := &Handle{
+		WorkerPoolSize: 5,
+		TaskQueue:      make([]chan string, 5),
+		Func: func(pd string, wg *sync.WaitGroup) bool {
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Println(err)
+				}
+			}()
+			fmt.Println("准备开始", pd)
+			paymentDate, _ := notion.ParseDateTime(pd)
+			incentiveData, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+				And: []notion.DatabaseQueryFilter{
+					{
+						Property: "Payment Date",
+						DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+							Date: &notion.DatePropertyFilter{
+								Equals: &paymentDate.Time,
+							},
+						},
+					},
+				},
+			})
+			for _, incentive := range incentiveData {
+				if incentive.Token == "" {
+					incentive.Token = "USD"
+					err := g.db.UpdatePage(&incentive)
+					if err != nil {
+						fmt.Println("异常->", err)
+						return false
+					}
+				}
+			}
+			fmt.Println("完成", pd)
+			return true
+		},
+		mux: sync.Mutex{},
+		wg:  sync.WaitGroup{},
+	}
+	handle.StartWorkerPool()
+	for i, pd := range payDateSlice {
+		handle.wg.Add(1)
+		handle.SendMsgToTaskQueue(i%int(handle.WorkerPoolSize), pd)
+	}
+	fmt.Println("等待完成----")
+	handle.wg.Wait()
+	result := handle.TaskResult
+	sort.Strings(result)
+	fmt.Println("失败的天->", result)
+}
+
+type Handle struct {
+	WorkerPoolSize uint32
+	TaskQueue      []chan string
+	Func           func(string, *sync.WaitGroup) bool
+	TaskResult     []string
+	mux            sync.Mutex
+	wg             sync.WaitGroup
+}
+
+func (h *Handle) StartWorkerPool() {
+	for i := 0; i < int(h.WorkerPoolSize); i++ {
+		h.TaskQueue[i] = make(chan string, 5)
+		go h.StartOneWorker(i, h.TaskQueue[i])
+	}
+}
+
+func (h *Handle) StartOneWorker(workerID int, taskQueue chan string) {
+	for {
+		select {
+		case request := <-taskQueue:
+			fmt.Println(workerID, "正在执行", request)
+			result := h.Func(request, &h.wg)
+			if !result {
+				h.mux.Lock()
+				h.TaskResult = append(h.TaskResult, request)
+				h.mux.Unlock()
+			}
+		}
+	}
+}
+
+func (h *Handle) SendMsgToTaskQueue(workerID int, request string) {
+	h.TaskQueue[workerID] <- request
 }

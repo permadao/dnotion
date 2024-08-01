@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/permadao/dnotion/utils"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -106,12 +107,12 @@ func (s *Service) genIncentiveStat() {
 	if exist {
 		return
 	}
-	success, paymentDateMap, err := s.guild.GenIncentiveStat("4c19704d927f4d52b2f030ebd1648ef3", now)
+	success, paymentDateMap, err := s.guild.GenIncentiveStat(utils.CincentiveWeeklyGuildRs, now)
 	if err != nil {
 		log.Error("GenIncentiveStat failed", "err", err)
 	}
 	if success {
-		err = s.guild.GenTotalIncentiveStat("04c301f8dc5448759c5919e618822854", paymentDateMap)
+		err = s.guild.GenTotalIncentiveStat(utils.CincentiveWeeklyRs, paymentDateMap)
 		if err != nil {
 			log.Error("GenTotalIncentiveStat failed", "err", err)
 		}

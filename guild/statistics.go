@@ -322,7 +322,8 @@ func (g *Guild) StatNewsFinance(nid, startDate string) (totalAmount float64, agg
 	return
 }
 
-func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, err error) {
+// StatBetweenFinanceGroupByCNidToken 按财务表的Contributor归集 同时区别开币别
+func (g *Guild) StatBetweenFinanceGroupByCNidToken(nid, startDate, endDate string) (statResults map[string]*schema.StatResult, err error) {
 	start, err := notion.ParseDateTime(startDate)
 	if err != nil {
 		return
@@ -363,11 +364,12 @@ func (g *Guild) StatBetweenFinanceGroupByCNID(targetToken, nid, startDate, endDa
 	if err != nil {
 		return
 	}
-	totalAmount, contributors, rankOfContributor = g.statFinanceGroupByCNID(targetToken, fins)
+	statResults = g.statFinanceGroupByCNID(fins)
 	return
 }
 
-func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid, endDate string) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor, paymentDate string, err error) {
+// StatWeeklyFinanceGroupByCNID 按财务表的Contributor归集 同时区别开币别
+func (g *Guild) StatWeeklyFinanceGroupByCNID(nid, endDate string) (statResults map[string]*schema.StatResult, paymentDate string, err error) {
 	endDateParser, _ := time.Parse("2006-01-02", endDate)
 	startDate := endDateParser.AddDate(0, 0, -6).Format("2006-01-02")
 	start, err := notion.ParseDateTime(startDate)
@@ -415,42 +417,45 @@ func (g *Guild) StatWeeklyFinanceGroupByCNID(targetToken, nid, endDate string) (
 	} else {
 		paymentDate = endDate
 	}
-	totalAmount, contributors, rankOfContributor = g.statFinanceGroupByCNID(targetToken, fins)
+	statResults = g.statFinanceGroupByCNID(fins)
 	return
 }
 
-func (g *Guild) statFinanceGroupByCNID(targetToken string, fins []dbSchema.FinData) (totalAmount float64, contributors map[string]float64, rankOfContributor []schema.Contributor) {
-	// stat
-	aggrContributors := map[string]float64{} // contributors id -> sum of rewards
+func (g *Guild) statFinanceGroupByCNID(fins []dbSchema.FinData) map[string]*schema.StatResult {
+	statResults := map[string]*schema.StatResult{}
+	// contributors id -> sum of rewards
 	for _, fin := range fins {
 		if fin.Contributor == "" {
 			continue
 		}
-		switch targetToken {
-		case "":
-			totalAmount += fin.Amount
-			aggrContributors[fin.Contributor] += fin.Amount
-		case fin.TargetToken:
-			totalAmount += fin.TargetAmount
-			aggrContributors[fin.Contributor] += fin.TargetAmount
-		default:
-			continue
+		//币别
+		token := fin.ActualToken
+		if token == "AR" {
+			token = "USD"
+		}
+		if statResult, ok := statResults[token]; ok {
+			statResult.TotalAmount += fin.Amount
+			statResult.Contributors[fin.Contributor] += fin.Amount
+		} else {
+			statResult := &schema.StatResult{}
+			statResult.Contributors = make(map[string]float64)
+			statResult.TotalAmount += fin.Amount
+			statResult.Contributors[fin.Contributor] += fin.Amount
+			statResults[token] = statResult
 		}
 	}
 
-	// gen contributors & rank
-	contributors = map[string]float64{}
-	for k, v := range aggrContributors {
-		contributors[k] = v
-
-		wallet := g.nidToWallet[k]
-		rankOfContributor = append(rankOfContributor, schema.Contributor{Name: k, Amount: v, Wallet: wallet})
+	for _, statResult := range statResults {
+		var rankOfContributor []schema.Contributor
+		for nid, amount := range statResult.Contributors {
+			wallet := g.nidToWallet[nid]
+			rankOfContributor = append(rankOfContributor, schema.Contributor{Name: nid, Amount: amount, Wallet: wallet})
+		}
+		sort.Slice(rankOfContributor, func(i, j int) bool {
+			return rankOfContributor[i].Amount > rankOfContributor[j].Amount
+		})
+		statResult.RankOfContributor = rankOfContributor
 	}
 
-	// sort and rank
-	sort.Slice(rankOfContributor, func(i, j int) bool {
-		return rankOfContributor[i].Amount > rankOfContributor[j].Amount
-	})
-
-	return
+	return statResults
 }
