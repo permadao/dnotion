@@ -236,6 +236,8 @@ func CalTotalIncentive(data []dbSchema.Incentive, hisData map[string]schema.Resu
 			totalIncentive := contributorMap[key]
 			(*totalIncentive).TotalIncentive += incentive.WeeklyIncentive
 			(*totalIncentive).WeeklyIncentive += incentive.WeeklyIncentive
+			allIncentive[incentive.NotionID] += incentive.WeeklyIncentive
+			weekIncentive[incentive.NotionID] += incentive.WeeklyIncentive
 		} else {
 			pageID++
 			totalIncentive := 0.0
@@ -256,9 +258,9 @@ func CalTotalIncentive(data []dbSchema.Incentive, hisData map[string]schema.Resu
 				OnboardDate:     incentive.OnboardDate,
 				Token:           token,
 			}
+			allIncentive[incentive.NotionID] += contributorMap[key].TotalIncentive
+			weekIncentive[incentive.NotionID] += contributorMap[key].WeeklyIncentive
 		}
-		allIncentive[incentive.NotionID] = contributorMap[key].TotalIncentive
-		weekIncentive[incentive.NotionID] = contributorMap[key].WeeklyIncentive
 	}
 
 	for _, totalIncentiveRecord := range contributorMap {

@@ -246,7 +246,11 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateC
 	update := []dbSchema.Incentive{}
 	pageId := 0
 	paymentDateCount = map[string]int{}
-	hisRecords := g.GetHisIncentiveRecords(now)
+	hisRecords, err := g.GetHisIncentiveRecords(now)
+	if err != nil {
+		log.Error("GetHisIncentiveRecords failed", "err", err)
+		return
+	}
 	for guild, nid := range guildFinMap {
 		weekStatResults, paymentDate, err := g.StatWeeklyFinanceGroupByCNID(nid, now)
 		if err != nil {
@@ -287,7 +291,12 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 	historyIncentiveByDate := map[string]schema.ResultSepToken{}
 	records := map[string]dbSchema.TotalIncentive{}
 	for paymentDateStr, _ := range paymentDateMap {
-		records = utils.MergeMaps(records, g.GetHisTotalIncentiveRecords(paymentDateStr))
+		totalIncentiveRecords, err := g.GetHisTotalIncentiveRecords(paymentDateStr)
+		if err != nil {
+			log.Error("GetHisTotalIncentiveRecords failed", "err", err)
+			return err
+		}
+		records = utils.MergeMaps(records, totalIncentiveRecords)
 		paymentDate, err1 := notion.ParseDateTime(paymentDateStr)
 		if err1 != nil {
 			return err1
@@ -316,21 +325,23 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 			incentiveData = append(incentiveData, data...)
 		}
 	}
+	if len(incentiveData) == 0 {
+		return
+	}
 	pageId := 0
-	//insert, update := CalTotalIncentive(incentiveData, historyIncentiveByDate, records, pageId)
-	//for _, tr := range insert {
-	//	if err = g.db.CreatePage(outNid, &tr); err != nil {
-	//		log.Error("create the incentive_weekly page failed", "err", err)
-	//		return
-	//	}
-	//}
-	//for _, tr := range update {
-	//	if err = g.db.UpdatePage(&tr); err != nil {
-	//		log.Error("update the incentive_weekly page failed", "err", err)
-	//		return
-	//	}
-	//}
-	CalTotalIncentive(incentiveData, historyIncentiveByDate, records, pageId)
+	insert, update := CalTotalIncentive(incentiveData, historyIncentiveByDate, records, pageId)
+	for _, tr := range insert {
+		if err = g.db.CreatePage(outNid, &tr); err != nil {
+			log.Error("create the incentive_weekly page failed", "err", err)
+			return
+		}
+	}
+	for _, tr := range update {
+		if err = g.db.UpdatePage(&tr); err != nil {
+			log.Error("update the incentive_weekly page failed", "err", err)
+			return
+		}
+	}
 	return
 }
 
@@ -365,10 +376,10 @@ func (g *Guild) GetHisTotalIncentiveRecordsSepToke(paymentDate notion.DateTime) 
 	return result, nil
 }
 
-func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) map[string]dbSchema.TotalIncentive {
+func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSchema.TotalIncentive, error) {
 	end, _ := notion.ParseDateTime(paymentDate)
 	//本周已经生成的数据
-	records, _ := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
+	records, err := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -380,22 +391,25 @@ func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) map[string]dbSch
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 	hisRecords := make(map[string]dbSchema.TotalIncentive)
 	for _, record := range records {
 		key := GetTIKey(record)
 		hisRecords[key] = record
 	}
-	return hisRecords
+	return hisRecords, nil
 }
 
-func (g *Guild) GetHisIncentiveRecords(acDate string) map[string]dbSchema.Incentive {
+func (g *Guild) GetHisIncentiveRecords(acDate string) (map[string]dbSchema.Incentive, error) {
 	//这周的时间范围
 	endDateTime, _ := time.Parse("2006-01-02", acDate)
 	startDate := endDateTime.AddDate(0, 0, -6).Format("2006-01-02")
 	start, _ := notion.ParseDateTime(startDate)
 	end, _ := notion.ParseDateTime(acDate)
 	//本周已经生成的数据
-	records, _ := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+	records, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -415,12 +429,15 @@ func (g *Guild) GetHisIncentiveRecords(acDate string) map[string]dbSchema.Incent
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 	hisRecords := make(map[string]dbSchema.Incentive)
 	for _, record := range records {
 		key := GetKey(record)
 		hisRecords[key] = record
 	}
-	return hisRecords
+	return hisRecords, nil
 }
 
 func (g *Guild) IsExistRecord(endDate string) (isExist bool, err error) {

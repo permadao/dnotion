@@ -432,6 +432,8 @@ func (g *Guild) statFinanceGroupByCNID(fins []dbSchema.FinData) map[string]*sche
 		token := fin.ActualToken
 		if token == "AR" {
 			token = "USD"
+		} else if token == "USDC" {
+			token = "USD"
 		}
 		if statResult, ok := statResults[token]; ok {
 			statResult.TotalAmount += fin.Amount
