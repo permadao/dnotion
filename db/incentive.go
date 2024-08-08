@@ -3,10 +3,11 @@ package db
 import (
 	"github.com/dstotijn/go-notion"
 	"github.com/permadao/dnotion/db/schema"
+	"github.com/permadao/dnotion/utils"
 )
 
 func (d *DB) GetIncentiveData(filter *notion.DatabaseQueryFilter) ([]schema.Incentive, error) {
-	nid := "4c19704d927f4d52b2f030ebd1648ef3"
+	nid := utils.CincentiveWeeklyGuildRs
 	pages, err := d.GetPages(nid, filter)
 	if err != nil {
 		return nil, err
@@ -33,7 +34,7 @@ func NewIncentiveDataFromProps(nid string, props notion.DatabasePageProperties) 
 }
 
 func (d *DB) GetTotalIncentiveData(filter *notion.DatabaseQueryFilter) ([]schema.TotalIncentive, error) {
-	nid := "04c301f8dc5448759c5919e618822854"
+	nid := utils.CincentiveWeeklyRs
 	pages, err := d.GetPages(nid, filter)
 	if err != nil {
 		return nil, err
