@@ -160,7 +160,7 @@ func GetGuildFinMap() (guildFinMap map[string]string) {
 	return
 }
 
-func GenStatRecords(completeStatResults map[string]*schema.StatResult, weekStatResults map[string]*schema.StatResult, hisRecords map[string]dbSchema.Incentive, guild string, acDate string, paymentDate string, pageID int, g *Guild) (insertRecords []dbSchema.Incentive, updateRecords []dbSchema.Incentive) {
+func GenStatRecords(completeStatResults map[string]*schema.StatResult, weekStatResults map[string]*schema.StatResult, hisRecords map[string]dbSchema.CIncentiveGuild, guild string, acDate string, paymentDate string, pageID *float64, g *Guild) (insertRecords []dbSchema.CIncentiveGuild, updateRecords []dbSchema.CIncentiveGuild) {
 	for token, statResult := range completeStatResults {
 		if _, ok := weekStatResults[token]; !ok {
 			continue
@@ -177,7 +177,7 @@ func GenStatRecords(completeStatResults map[string]*schema.StatResult, weekStatR
 			if _, ok := weekContributors[contributor]; !ok {
 				continue
 			}
-			incentiveRecord := dbSchema.Incentive{
+			incentiveRecord := dbSchema.CIncentiveGuild{
 				AccountingDate:  acDate,
 				Guild:           guild,
 				NotionName:      notionName,
@@ -215,8 +215,8 @@ func GenStatRecords(completeStatResults map[string]*schema.StatResult, weekStatR
 				delete(hisRecords, GetKeyNoToken(incentiveRecord))
 				updateRecords = append(updateRecords, record)
 			} else {
-				pageID++
-				incentiveRecord.ID = fmt.Sprintf("%d", pageID)
+				*pageID++
+				incentiveRecord.ID = *pageID
 				insertRecords = append(insertRecords, incentiveRecord)
 			}
 		}
@@ -224,8 +224,8 @@ func GenStatRecords(completeStatResults map[string]*schema.StatResult, weekStatR
 	return
 }
 
-func CalTotalIncentive(data []dbSchema.Incentive, hisData map[string]schema.ResultSepToken, records map[string]dbSchema.TotalIncentive, pageID int) (insertRecords []dbSchema.TotalIncentive, updateRecords []dbSchema.TotalIncentive) {
-	contributorMap := map[string]*dbSchema.TotalIncentive{}
+func CalTotalIncentive(data []dbSchema.CIncentiveGuild, hisData map[string]schema.ResultSepToken, records map[string]dbSchema.CIncentive, pageID *float64) (insertRecords []dbSchema.CIncentive, updateRecords []dbSchema.CIncentive) {
+	contributorMap := map[string]*dbSchema.CIncentive{}
 	//不区分币别的激励
 	allIncentive := map[string]float64{}
 	weekIncentive := map[string]float64{}
@@ -239,15 +239,14 @@ func CalTotalIncentive(data []dbSchema.Incentive, hisData map[string]schema.Resu
 			allIncentive[incentive.NotionID] += incentive.WeeklyIncentive
 			weekIncentive[incentive.NotionID] += incentive.WeeklyIncentive
 		} else {
-			pageID++
 			totalIncentive := 0.0
 			if ti, ok := hisData[incentive.PaymentDate]; ok {
 				if rst, ok := ti[incentive.Token]; ok {
 					totalIncentive = rst[incentive.NotionID]
 				}
 			}
-			contributorMap[key] = &dbSchema.TotalIncentive{
-				ID:              fmt.Sprintf("%d", pageID),
+			contributorMap[key] = &dbSchema.CIncentive{
+				ID:              *pageID,
 				AccountingDate:  incentive.AccountingDate,
 				NotionID:        incentive.NotionID,
 				NotionName:      incentive.NotionName,
@@ -258,6 +257,7 @@ func CalTotalIncentive(data []dbSchema.Incentive, hisData map[string]schema.Resu
 				OnboardDate:     incentive.OnboardDate,
 				Token:           token,
 			}
+			*pageID++
 			allIncentive[incentive.NotionID] += contributorMap[key].TotalIncentive
 			weekIncentive[incentive.NotionID] += contributorMap[key].WeeklyIncentive
 		}
@@ -339,18 +339,18 @@ func GDMedal(hisIncentive, curIncentive float64) (medal string) {
 	return
 }
 
-func GetKey(incentive dbSchema.Incentive) string {
+func GetKey(incentive dbSchema.CIncentiveGuild) string {
 	return strings.Join([]string{incentive.Guild, incentive.NotionID, incentive.PaymentDate, incentive.Token}, "-")
 }
 
-func GetKeyNoToken(incentive dbSchema.Incentive) string {
+func GetKeyNoToken(incentive dbSchema.CIncentiveGuild) string {
 	return strings.Join([]string{incentive.Guild, incentive.NotionID, incentive.PaymentDate, ""}, "-")
 }
 
-func GetTIKey(incentive dbSchema.TotalIncentive) string {
+func GetTIKey(incentive dbSchema.CIncentive) string {
 	return strings.Join([]string{incentive.NotionID, incentive.PaymentDate, incentive.Token}, "-")
 }
 
-func GetTIKeyNoToken(incentive dbSchema.TotalIncentive) string {
+func GetTIKeyNoToken(incentive dbSchema.CIncentive) string {
 	return strings.Join([]string{incentive.NotionID, incentive.PaymentDate, ""}, "-")
 }
