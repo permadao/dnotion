@@ -40,6 +40,10 @@ func New(conf *config.Config, db *db.DB) *Guild {
 	return g
 }
 
+func (g *Guild) DB() *db.DB {
+	return g.db
+}
+
 func (g *Guild) LoadContributors() {
 	contributors, err := g.db.GetContributors(nil)
 	if err != nil {
@@ -303,7 +307,7 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 		if err1 != nil {
 			return err1
 		}
-		data, err2 := g.db.GetIncentiveGuildData(utils.CincentiveWeeklyGuildRs, &notion.DatabaseQueryFilter{
+		data, err2 := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 			And: []notion.DatabaseQueryFilter{
 				{
 					Property: "Payment Date",
@@ -351,7 +355,7 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 
 func (g *Guild) GetHisTotalIncentiveRecordsSepToke(paymentDate notion.DateTime) (schema.ResultSepToken, error) {
 	result := schema.ResultSepToken{}
-	hisData, err := g.db.GetIncentiveGuildData(utils.CincentiveWeeklyGuildRs, &notion.DatabaseQueryFilter{
+	hisData, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -383,7 +387,7 @@ func (g *Guild) GetHisTotalIncentiveRecordsSepToke(paymentDate notion.DateTime) 
 func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSchema.CIncentive, error) {
 	end, _ := notion.ParseDateTime(paymentDate)
 	//本周已经生成的数据
-	records, err := g.db.GetCIncentiveData(utils.CincentiveWeeklyRs, &notion.DatabaseQueryFilter{
+	records, err := g.db.GetCIncentiveData(g.db.CincentiveWeeklyDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -413,7 +417,7 @@ func (g *Guild) GetHisIncentiveRecords(acDate string) (map[string]dbSchema.CInce
 	start, _ := notion.ParseDateTime(startDate)
 	end, _ := notion.ParseDateTime(acDate)
 	//本周已经生成的数据
-	records, err := g.db.GetIncentiveGuildData(utils.CincentiveWeeklyGuildRs, &notion.DatabaseQueryFilter{
+	records, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -492,7 +496,7 @@ func (g *Guild) IsExistRecord(endDate string) (isExist bool, err error) {
 
 func (g *Guild) IsExistIncentiveStatRecord(endDateStr string) bool {
 	endDate, _ := notion.ParseDateTime(endDateStr)
-	data, err := g.db.GetIncentiveGuildData(utils.CincentiveWeeklyGuildRs, &notion.DatabaseQueryFilter{
+	data, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",

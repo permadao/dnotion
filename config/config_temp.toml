@@ -49,6 +49,8 @@ appname = "dnotion"
 		"27555aec8d734b6889ae1836d7a67b4a", # psp prod
 		"0c8f5483e1344d919e5e5a49d6d8dabb", # meeting
     ]
+    db_cincentive_weekly = "04c301f8dc5448759c5919e618822854" # cincentive_weekly_rs
+    db_cincentive_guild_weekly = "4c19704d927f4d52b2f030ebd1648ef3" # cincentive_weekly_guild_rs
 
 # everpay
 [everpay]
