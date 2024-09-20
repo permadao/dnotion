@@ -117,7 +117,9 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 	}
 }
 
-func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
+func (g *Guild) GenGrade(startDate, endDate string) (err error) {
+	guidNid := g.db.FinanceDBs[config.TRANSLATION]
+	gradeNid := g.db.TranslationContributorDB
 	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
 	if err != nil {
 		return
@@ -139,7 +141,9 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	return
 }
 
-func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+func (g *Guild) GenDevGrade(lastDate, endDate string) (err error) {
+	guidNid := g.db.FinanceDBs[config.DEV]
+	gradeNid := g.db.DevContributorDB
 	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDate)
 	if err != nil {
 		return
@@ -181,7 +185,9 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 }
 
 // 新闻工会等级计算
-func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+func (g *Guild) GenNewsGrade(lastDate, endDate string) (err error) {
+	guidNid := g.db.WorkloadDBs[config.SUBMISSION]
+	gradeNid := g.db.SubmissionRankDB
 	_, aggrContributorsFor15weeks, aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid, lastDate)
 	if err != nil {
 		return
@@ -208,7 +214,9 @@ func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err e
 	return
 }
 
-func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err error) {
+func (g *Guild) GenPromotionSettlement(endDate string) (err error) {
+	guidNid := g.db.PromotionNewplzDB
+	outNid := g.db.PromotionRewardDB
 	//1 query the weekly table of promotion
 	endD, err := notion.ParseDateTime(endDate)
 	if err != nil {
@@ -243,7 +251,8 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err err
 	return
 }
 
-func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateCount map[string]int, err error) {
+func (g *Guild) GenIncentiveStat(now string) (success bool, paymentDateCount map[string]int, err error) {
+	outNid := g.db.CincentiveWeeklyGuildDB
 	guildFinMap := GetGuildFinMap()
 	startDate := "1970-01-01"
 	insert := []dbSchema.CIncentiveGuild{}
@@ -292,7 +301,8 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateC
 	return
 }
 
-func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]int) (err error) {
+func (g *Guild) GenTotalIncentiveStat(paymentDateMap map[string]int) (err error) {
+	outNid := g.db.CincentiveWeeklyDB
 	incentiveData := []dbSchema.CIncentiveGuild{}
 	historyIncentiveByDate := map[string]schema.ResultSepToken{}
 	records := map[string]dbSchema.CIncentive{}
