@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/permadao/dnotion/utils"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -66,17 +65,17 @@ func (s *Service) genGrade() {
 	log.Info("genGrade...", "start", start, "end", end)
 
 	// translation guild grade
-	if err := s.guild.GenGrade("e8d79c55c0394cba83664f3e5737b0bd", "d8c270f68a8f44aaa6b24e17c927df2b", start, end); err != nil {
+	if err := s.guild.GenGrade(start, end); err != nil {
 		log.Error("genGrade failed", "err", err)
 	}
 
 	// developer guild grade
-	if err := s.guild.GenDevGrade("146e1f661ed943e3a460b8cf12334b7b", "623ccfc9fb1443279decf90fb752215d", last, end); err != nil {
+	if err := s.guild.GenDevGrade(last, end); err != nil {
 		log.Error("genDevGrade failed", "err", err)
 	}
 
 	// news guild grade
-	if err := s.guild.GenNewsGrade("ad2cf585b08843fea7cf40a682bc4529", "d5f9fc70910b45d4ab8811f37716637d", startDateOfNews, end); err != nil {
+	if err := s.guild.GenNewsGrade(startDateOfNews, end); err != nil {
 		log.Error("genNewsGrade failed", "err", err)
 	}
 
@@ -89,7 +88,7 @@ func (s *Service) genPromotionsStat() {
 
 	end := GetCurrentDate()
 	// Automatic settlement of brand promotion points
-	if err := s.guild.GenPromotionSettlement("14debb08a4e8416e9b0de7ce46821506", "2ea3ff42b3b84d5cbc9a575d4c436878", end); err != nil {
+	if err := s.guild.GenPromotionSettlement(end); err != nil {
 		log.Error("Automatic settlement of brand promotion points failed", "err", err)
 	}
 	log.Info("genPromotionsStat done")
@@ -107,12 +106,12 @@ func (s *Service) genIncentiveStat() {
 	if exist {
 		return
 	}
-	success, paymentDateMap, err := s.guild.GenIncentiveStat(utils.CincentiveWeeklyGuildRs, now)
+	success, paymentDateMap, err := s.guild.GenIncentiveStat(now)
 	if err != nil {
 		log.Error("GenIncentiveStat failed", "err", err)
 	}
 	if success {
-		err = s.guild.GenTotalIncentiveStat(utils.CincentiveWeeklyRs, paymentDateMap)
+		err = s.guild.GenTotalIncentiveStat(paymentDateMap)
 		if err != nil {
 			log.Error("GenTotalIncentiveStat failed", "err", err)
 		}

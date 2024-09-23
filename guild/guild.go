@@ -40,6 +40,10 @@ func New(conf *config.Config, db *db.DB) *Guild {
 	return g
 }
 
+func (g *Guild) DB() *db.DB {
+	return g.db
+}
+
 func (g *Guild) LoadContributors() {
 	contributors, err := g.db.GetContributors(nil)
 	if err != nil {
@@ -113,7 +117,9 @@ func (g *Guild) GenGuilds(targetToken, date string) {
 	}
 }
 
-func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err error) {
+func (g *Guild) GenGrade(startDate, endDate string) (err error) {
+	guidNid := g.db.FinanceDBs[config.TRANSLATION]
+	gradeNid := g.db.TranslationContributorDB
 	_, _, rankOfContributor, err := g.StatBetweenFinance("AR", guidNid, startDate, endDate)
 	if err != nil {
 		return
@@ -135,7 +141,9 @@ func (g *Guild) GenGrade(guidNid, gradeNid, startDate, endDate string) (err erro
 	return
 }
 
-func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+func (g *Guild) GenDevGrade(lastDate, endDate string) (err error) {
+	guidNid := g.db.FinanceDBs[config.DEV]
+	gradeNid := g.db.DevContributorDB
 	_, _, rankOfContributor, err := g.StatBeforeFinanceByAmount(guidNid, endDate)
 	if err != nil {
 		return
@@ -177,7 +185,9 @@ func (g *Guild) GenDevGrade(guidNid, gradeNid, lastDate, endDate string) (err er
 }
 
 // 新闻工会等级计算
-func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err error) {
+func (g *Guild) GenNewsGrade(lastDate, endDate string) (err error) {
+	guidNid := g.db.WorkloadDBs[config.SUBMISSION]
+	gradeNid := g.db.SubmissionRankDB
 	_, aggrContributorsFor15weeks, aggrContributorsForAllDay, err := g.StatNewsFinance(guidNid, lastDate)
 	if err != nil {
 		return
@@ -204,7 +214,9 @@ func (g *Guild) GenNewsGrade(guidNid, gradeNid, lastDate, endDate string) (err e
 	return
 }
 
-func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err error) {
+func (g *Guild) GenPromotionSettlement(endDate string) (err error) {
+	guidNid := g.db.PromotionNewplzDB
+	outNid := g.db.PromotionRewardDB
 	//1 query the weekly table of promotion
 	endD, err := notion.ParseDateTime(endDate)
 	if err != nil {
@@ -239,18 +251,21 @@ func (g *Guild) GenPromotionSettlement(guidNid, outNid, endDate string) (err err
 	return
 }
 
-func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateCount map[string]int, err error) {
+func (g *Guild) GenIncentiveStat(now string) (success bool, paymentDateCount map[string]int, err error) {
+	outNid := g.db.CincentiveWeeklyGuildDB
 	guildFinMap := GetGuildFinMap()
 	startDate := "1970-01-01"
-	insert := []dbSchema.Incentive{}
-	update := []dbSchema.Incentive{}
-	pageId := 0
+	insert := []dbSchema.CIncentiveGuild{}
+	update := []dbSchema.CIncentiveGuild{}
 	paymentDateCount = map[string]int{}
 	hisRecords, err := g.GetHisIncentiveRecords(now)
 	if err != nil {
 		log.Error("GetHisIncentiveRecords failed", "err", err)
 		return
 	}
+	//获取总数
+	counts, err := g.db.GetCount(outNid)
+	pageId := float64(counts)
 	for guild, nid := range guildFinMap {
 		weekStatResults, paymentDate, err := g.StatWeeklyFinanceGroupByCNID(nid, now)
 		if err != nil {
@@ -265,7 +280,7 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateC
 			log.Error("statistic the total incentive of various guild failed", "err", err2)
 			return false, paymentDateCount, err2
 		}
-		insertRecords, updateRecords := GenStatRecords(completeStatResults, weekStatResults, hisRecords, guild, now, paymentDate, pageId, g)
+		insertRecords, updateRecords := GenStatRecords(completeStatResults, weekStatResults, hisRecords, guild, now, paymentDate, &pageId, g)
 		insert = append(insert, insertRecords...)
 		update = append(update, updateRecords...)
 		paymentDateCount[paymentDate]++
@@ -286,10 +301,11 @@ func (g *Guild) GenIncentiveStat(outNid, now string) (success bool, paymentDateC
 	return
 }
 
-func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]int) (err error) {
-	incentiveData := []dbSchema.Incentive{}
+func (g *Guild) GenTotalIncentiveStat(paymentDateMap map[string]int) (err error) {
+	outNid := g.db.CincentiveWeeklyDB
+	incentiveData := []dbSchema.CIncentiveGuild{}
 	historyIncentiveByDate := map[string]schema.ResultSepToken{}
-	records := map[string]dbSchema.TotalIncentive{}
+	records := map[string]dbSchema.CIncentive{}
 	for paymentDateStr, _ := range paymentDateMap {
 		totalIncentiveRecords, err := g.GetHisTotalIncentiveRecords(paymentDateStr)
 		if err != nil {
@@ -301,7 +317,7 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 		if err1 != nil {
 			return err1
 		}
-		data, err2 := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+		data, err2 := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 			And: []notion.DatabaseQueryFilter{
 				{
 					Property: "Payment Date",
@@ -328,8 +344,10 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 	if len(incentiveData) == 0 {
 		return
 	}
-	pageId := 0
-	insert, update := CalTotalIncentive(incentiveData, historyIncentiveByDate, records, pageId)
+	//获取总数
+	counts, err := g.db.GetCount(outNid)
+	pageId := float64(counts)
+	insert, update := CalTotalIncentive(incentiveData, historyIncentiveByDate, records, &pageId)
 	for _, tr := range insert {
 		if err = g.db.CreatePage(outNid, &tr); err != nil {
 			log.Error("create the incentive_weekly page failed", "err", err)
@@ -347,7 +365,7 @@ func (g *Guild) GenTotalIncentiveStat(outNid string, paymentDateMap map[string]i
 
 func (g *Guild) GetHisTotalIncentiveRecordsSepToke(paymentDate notion.DateTime) (schema.ResultSepToken, error) {
 	result := schema.ResultSepToken{}
-	hisData, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+	hisData, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -376,10 +394,10 @@ func (g *Guild) GetHisTotalIncentiveRecordsSepToke(paymentDate notion.DateTime) 
 	return result, nil
 }
 
-func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSchema.TotalIncentive, error) {
+func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSchema.CIncentive, error) {
 	end, _ := notion.ParseDateTime(paymentDate)
 	//本周已经生成的数据
-	records, err := g.db.GetTotalIncentiveData(&notion.DatabaseQueryFilter{
+	records, err := g.db.GetCIncentiveData(g.db.CincentiveWeeklyDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -394,7 +412,7 @@ func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSc
 	if err != nil {
 		return nil, err
 	}
-	hisRecords := make(map[string]dbSchema.TotalIncentive)
+	hisRecords := make(map[string]dbSchema.CIncentive)
 	for _, record := range records {
 		key := GetTIKey(record)
 		hisRecords[key] = record
@@ -402,14 +420,14 @@ func (g *Guild) GetHisTotalIncentiveRecords(paymentDate string) (map[string]dbSc
 	return hisRecords, nil
 }
 
-func (g *Guild) GetHisIncentiveRecords(acDate string) (map[string]dbSchema.Incentive, error) {
+func (g *Guild) GetHisIncentiveRecords(acDate string) (map[string]dbSchema.CIncentiveGuild, error) {
 	//这周的时间范围
 	endDateTime, _ := time.Parse("2006-01-02", acDate)
 	startDate := endDateTime.AddDate(0, 0, -6).Format("2006-01-02")
 	start, _ := notion.ParseDateTime(startDate)
 	end, _ := notion.ParseDateTime(acDate)
 	//本周已经生成的数据
-	records, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+	records, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",
@@ -432,7 +450,7 @@ func (g *Guild) GetHisIncentiveRecords(acDate string) (map[string]dbSchema.Incen
 	if err != nil {
 		return nil, err
 	}
-	hisRecords := make(map[string]dbSchema.Incentive)
+	hisRecords := make(map[string]dbSchema.CIncentiveGuild)
 	for _, record := range records {
 		key := GetKey(record)
 		hisRecords[key] = record
@@ -488,7 +506,7 @@ func (g *Guild) IsExistRecord(endDate string) (isExist bool, err error) {
 
 func (g *Guild) IsExistIncentiveStatRecord(endDateStr string) bool {
 	endDate, _ := notion.ParseDateTime(endDateStr)
-	data, err := g.db.GetIncentiveData(&notion.DatabaseQueryFilter{
+	data, err := g.db.GetIncentiveGuildData(g.db.CincentiveWeeklyGuildDB, &notion.DatabaseQueryFilter{
 		And: []notion.DatabaseQueryFilter{
 			{
 				Property: "Payment Date",

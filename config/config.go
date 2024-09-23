@@ -22,12 +22,19 @@ type Config struct {
 		Version     string `mapstructure:"version"`
 
 		// dbs
-		ContributorsDB string   `mapstructure:"db_contributors"`
-		GuildDB        string   `mapstructure:"db_guild"`
-		ContentStatDB  string   `mapstructure:"db_content_stat"`
-		TaskDBs        []string `mapstructure:"task_dbs"`
-		WorkloadDBs    []string `mapstructure:"workload_dbs"`
-		FinDBs         []string `mapstructure:"finance_dbs"`
+		ContributorsDB           string   `mapstructure:"db_contributors"`
+		GuildDB                  string   `mapstructure:"db_guild"`
+		ContentStatDB            string   `mapstructure:"db_content_stat"`
+		TaskDBs                  []string `mapstructure:"task_dbs"`
+		WorkloadDBs              []string `mapstructure:"workload_dbs"`
+		FinDBs                   []string `mapstructure:"finance_dbs"`
+		CincentiveWeeklyDB       string   `mapstructure:"db_cincentive_weekly"`
+		CincentiveWeeklyGuildDB  string   `mapstructure:"db_cincentive_guild_weekly"`
+		TranslationContributorDB string   `mapstructure:"db_translation_contributor"`
+		DevContributorDB         string   `mapstructure:"db_dev_contributor"`
+		SubmissionRankDB         string   `mapstructure:"db_submission_rank"`
+		PromotionRewardDB        string   `mapstructure:"db_promotion_reward"`
+		PromotionNewplzDB        string   `mapstructure:"db_promotion_newplz"`
 	} `mapstructure:"notiondb"`
 
 	// everpay
@@ -61,3 +68,19 @@ func New(file string) *Config {
 	}
 	return &config
 }
+
+type FinDB int8
+
+const (
+	CONTENT FinDB = iota
+	TRANSLATION
+	SUBMISSION
+	RESEARCH
+	PROMOTION
+	ACTIVITY
+	ADMIN
+	DEV
+	PSPMARKET
+	PSPPROD
+	MEETING
+)

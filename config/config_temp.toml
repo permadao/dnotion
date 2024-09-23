@@ -49,6 +49,14 @@ appname = "dnotion"
 		"27555aec8d734b6889ae1836d7a67b4a", # psp prod
 		"0c8f5483e1344d919e5e5a49d6d8dabb", # meeting
     ]
+    db_cincentive_weekly = "04c301f8dc5448759c5919e618822854" # cincentive_weekly_rs
+    db_cincentive_guild_weekly = "4c19704d927f4d52b2f030ebd1648ef3" # cincentive_weekly_guild_rs
+	db_translation_contributor = "d8c270f68a8f44aaa6b24e17c927df2b"
+	db_dev_contributor = "623ccfc9fb1443279decf90fb752215d"
+	db_submission_rank = "d5f9fc70910b45d4ab8811f37716637d"
+    db_promotion_reward = "2ea3ff42b3b84d5cbc9a575d4c436878"
+    db_promotion_newplz = "14debb08a4e8416e9b0de7ce46821506"
+
 
 # everpay
 [everpay]
