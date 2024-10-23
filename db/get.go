@@ -3,9 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
-	"strconv"
-
 	"github.com/dstotijn/go-notion"
+	"strconv"
 )
 
 func (d *DB) GetPageByID(nid, id string) (*notion.Page, error) {
@@ -89,6 +88,7 @@ func (d *DB) GetPages(nid string, filter *notion.DatabaseQueryFilter) (pages []n
 				},
 			},
 			StartCursor: nextCursor,
+			PageSize:    100, // 设置分页大小
 		})
 		if err != nil {
 			fmt.Println("query database error: ", err)

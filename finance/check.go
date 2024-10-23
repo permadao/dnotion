@@ -2,6 +2,7 @@ package finance
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/dstotijn/go-notion"
@@ -15,43 +16,79 @@ func (f *Finance) CheckAllDbsCountAndID() (faileddbs []string) {
 }
 
 func (f *Finance) CheckDbsCountAndID(dbs []string) (faileddbs []string) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex // 用于保护 faileddbs 的并发写操作
+
 	for _, nid := range dbs {
-		t := time.Now()
-		log.Info("Checking count and id fnid", "nid", nid)
-		count, err := f.db.GetCount(nid)
-		if err != nil {
-			msg := fmt.Sprintf("get count failed, nid: %s, err: %v\n", nid, err)
-			log.Error(msg)
-			faileddbs = append(faileddbs, msg)
-			continue
-		}
-		lastid, err := f.db.GetLastID(nid)
-		if err != nil {
-			msg := fmt.Sprintf("get last id failed, nid: %s, err: %v\n", nid, err)
-			log.Error(msg)
-			faileddbs = append(faileddbs, msg)
-			continue
-		}
-		if count != lastid {
-			msg := fmt.Sprintf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
-			log.Error(msg)
-			faileddbs = append(faileddbs, msg)
-		}
-		log.Info("Check done", "fin_nid", nid, "time", time.Since(t))
+		wg.Add(1) // 每启动一个 goroutine，增加计数器
+		go func(nid string) {
+			defer wg.Done() // 当 goroutine 完成时，减少计数器
+
+			t := time.Now()
+			log.Info("Checking count and id fnid", "nid", nid)
+
+			count, err := f.db.GetCount(nid)
+			if err != nil {
+				msg := fmt.Sprintf("get count failed, nid: %s, err: %v\n", nid, err)
+				log.Error(msg)
+				mu.Lock()
+				faileddbs = append(faileddbs, msg)
+				mu.Unlock()
+				return
+			}
+
+			lastid, err := f.db.GetLastID(nid)
+			if err != nil {
+				msg := fmt.Sprintf("get last id failed, nid: %s, err: %v\n", nid, err)
+				log.Error(msg)
+				mu.Lock()
+				faileddbs = append(faileddbs, msg)
+				mu.Unlock()
+				return
+			}
+
+			if count != lastid {
+				msg := fmt.Sprintf("nid: %s with wrong count and last id: %d, %d\n", nid, count, lastid)
+				log.Error(msg)
+				mu.Lock()
+				faileddbs = append(faileddbs, msg)
+				mu.Unlock()
+			}
+
+			log.Info("Check done", "fin_nid", nid, "time", time.Since(t))
+		}(nid)
 	}
+
+	// 等待所有 goroutine 完成
+	wg.Wait()
+
 	return
 }
 
 func (f *Finance) CheckAllWorkloadAndAmount() (errLogs []string) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex // 用于保护 errLogs 的并发写操作
+
 	for i, fnid := range f.db.FinanceDBs {
-		t := time.Now()
-		log.Info("Checking workload and amount fnid: ", fnid)
+		wg.Add(1) // 每启动一个 goroutine，增加计数器
+		go func(fnid string, workloadDB string) {
+			defer wg.Done() // 当 goroutine 完成时，减少计数器
 
-		errs := f.CheckWorkloadAndAmount(fnid, f.db.WorkloadDBs[i])
-		errLogs = append(errLogs, errs...)
+			t := time.Now()
+			log.Info("Checking workload and amount fnid: ", fnid)
 
-		log.Info("Check done", "fin_nid", fnid, "time", time.Since(t))
+			errs := f.CheckWorkloadAndAmount(fnid, workloadDB)
+			mu.Lock()
+			errLogs = append(errLogs, errs...)
+			mu.Unlock()
+
+			log.Info("Check done", "fin_nid", fnid, "time", time.Since(t))
+		}(fnid, f.db.WorkloadDBs[i])
 	}
+
+	// 等待所有 goroutine 完成
+	wg.Wait()
+
 	return
 }
 
