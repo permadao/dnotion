@@ -27,7 +27,9 @@ func (f *WorkloadData) DeserializePropertys(nid string, props notion.DatabasePag
 		f.TaskStatus = props["Task Status"].Select.Name
 	}
 	if len(props["Name"].RichText) > 0 {
-		f.Name = props["Name"].RichText[0].Text.Content
+		if props["Name"].RichText[0].Text != nil {
+			f.Name = props["Name"].RichText[0].Text.Content
+		}
 	}
 	if len(props["Note"].RichText) > 0 {
 		f.Note = props["Note"].RichText[0].Text.Content
