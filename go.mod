@@ -87,3 +87,5 @@ require (
 )
 
 replace github.com/dstotijn/go-notion v0.11.0 => ./go-notion
+
+replace github.com/permadao/dnotion => D:/golang/go/dnotion

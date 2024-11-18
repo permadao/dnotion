@@ -28,6 +28,7 @@ type Config struct {
 		TaskDBs                  []string `mapstructure:"task_dbs"`
 		WorkloadDBs              []string `mapstructure:"workload_dbs"`
 		FinDBs                   []string `mapstructure:"finance_dbs"`
+		WeeklyDBs                []string `mapstructure:"weekly_dbs"`
 		CincentiveWeeklyDB       string   `mapstructure:"db_cincentive_weekly"`
 		CincentiveWeeklyGuildDB  string   `mapstructure:"db_cincentive_guild_weekly"`
 		TranslationContributorDB string   `mapstructure:"db_translation_contributor"`
