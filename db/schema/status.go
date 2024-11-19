@@ -14,4 +14,8 @@ const (
 	StatusOutOfQuality   = "Out Of Quality"
 	StatusNotRelatedToAr = "Not Related To Arweave"
 	StatusCopycat        = "Copycat"
+	// Workload Token
+	TokenUSD = "USD"
+	TokenBP  = "BP"
+	TokenAR  = "AR"
 )

@@ -31,8 +31,6 @@ appname = "dnotion"
 		"28b4a0d7e78346f69f6a859386b38225", # activity
 		"6dd7a8c678ed4f42be27713cd11f147b", # admin
 		"4c4d512c4c9e4e09b951967752f185ea", # dev
-		"179790222580482f9e691ab6618f473e", # psp market
-		"8cd2d839823a42daa1c8ae5b104c67c7", # psp prod
 		"ef2043f45b0144ec846f69cd035c1224", # meeting
     ]
     # finance db
@@ -45,8 +43,6 @@ appname = "dnotion"
 		"f2160eae42e9483882f01d3daa7090fa", # activity
 		"caac7a1aefcc4ed0b02b8adbc106f021", # admin
 		"146e1f661ed943e3a460b8cf12334b7b", # dev
-		"a9ce0c5902b14e4891ed0fb6333a9e92", # psp market
-		"27555aec8d734b6889ae1836d7a67b4a", # psp prod
 		"0c8f5483e1344d919e5e5a49d6d8dabb", # meeting
     ]
     db_cincentive_weekly = "04c301f8dc5448759c5919e618822854" # cincentive_weekly_rs
@@ -57,6 +53,7 @@ appname = "dnotion"
     db_promotion_reward = "2ea3ff42b3b84d5cbc9a575d4c436878"
     db_promotion_newplz = "14debb08a4e8416e9b0de7ce46821506"
 
+	weekly_dbs = "63b85af88f3a43b788f0b748eadcdc46" # weekly
 
 # everpay
 [everpay]
@@ -75,3 +72,15 @@ appname = "dnotion"
 # service
 [service]
 	port = 3002
+
+# finance_dbs_comments
+[notiondb.finance_dbs_comments]
+	"328f2bfbfdbe4f9581af37f393893e36" = "content"
+	"e8d79c55c0394cba83664f3e5737b0bd" = "translation"
+	"a815dcd96395424a93d9854b4418ab03" = "submission"
+	"d88c605475eb435cbd6ec6d164c049dd" = "research"
+	"990db3313e42412b8c6ab07e399a2635" = "Promotion"
+	"f2160eae42e9483882f01d3daa7090fa" = "activity"
+	"caac7a1aefcc4ed0b02b8adbc106f021" = "admin"
+	"146e1f661ed943e3a460b8cf12334b7b" = "dev"
+	"0c8f5483e1344d919e5e5a49d6d8dabb" = "meeting"
