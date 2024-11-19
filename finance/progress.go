@@ -27,65 +27,41 @@ func (f *Finance) UpdateAllFinToProgress(
 	return
 }
 
-//func (f *Finance) UpdateFinToProgress(
-//	finNid, paymentDateStr,
-//	actualToken string, actualPrice float64,
-//	targetToken string, targetPrice float64,
-//) (errs []string) {
-//	t := time.Now()
-//	log.Info("update fin to progress", "fin_nid", finNid)
-//
-//	// get Status is Not started & Workload Status is Acctual txs
-//	pages, err := f.db.GetPages(finNid, &notion.DatabaseQueryFilter{
-//		And: []notion.DatabaseQueryFilter{
-//			notion.DatabaseQueryFilter{
-//				Property: "Status",
-//				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-//					Status: &notion.StatusDatabaseQueryFilter{
-//						Equals: schema.StatusNotStarted,
-//					},
-//				},
-//			},
-//			notion.DatabaseQueryFilter{
-//				Property: "Workload Status",
-//				DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
-//					Rollup: &notion.RollupDatabaseQueryFilter{
-//						Any: &notion.DatabaseQueryPropertyFilter{
-//							Status: &notion.StatusDatabaseQueryFilter{
-//								Equals: schema.StatusAccrual,
-//							},
-//						},
-//					},
-//				},
-//			},
-//		},
-//	})
-//	if err != nil {
-//		msg := fmt.Sprintf("get pages failed, fin_nid:%s, error: %s", finNid, err.Error())
-//		log.Error(msg)
-//		errs = append(errs, msg)
-//		return
-//	}
-//	// update page
-//	for _, page := range pages {
-//		finData := schema.FinData{
-//			NID:         page.ID,
-//			ActualToken: actualToken,
-//			ActualPrice: actualPrice,
-//			TargetToken: targetToken,
-//			TargetPrice: targetPrice,
-//			Status:      schema.StatusInProgress,
-//			PaymentDate: paymentDateStr,
-//		}
-//		if err := f.db.UpdatePage(&finData); err != nil {
-//			msg := fmt.Sprintf("Update nid/id: %v/%v failed. %v", finNid, page.ID, err)
-//			log.Error(msg)
-//			errs = append(errs, msg)
-//		}
-//	}
-//	log.Info("Update done", "fin_nid", finNid, "time", time.Since(t))
-//	return
-//}
+func (f *Finance) UpdateWeeklyDBs(finNid string, totalAmount float64) error {
+	log.Info("Updating WeeklyDBs", "fin_nid", finNid, "totalAmount", totalAmount)
+	log.Info("WeeklyDBs: %v", f.db.WeeklyDBs)
+	log.Info("WeeklyDBs: %v", f.db.WeeklyDBs)
+
+	// 获取最新的 ID
+	weekLastID, err := f.db.GetLastID(f.db.WeeklyDBs)
+	if err != nil {
+		return fmt.Errorf("failed to fetch the last ID for fin_nid: %s, error: %s", f.db.WeeklyDBs, err.Error())
+	}
+
+	// 解析出下一个 ID (假设 ID 是数字格式)
+	newID := weekLastID + 1
+
+	// 从配置中获取对应的 Guild 名称
+	guildName, exists := f.db.FinanceDBsComments[finNid]
+	if !exists {
+		return fmt.Errorf("fin_nid: %s not found in finance_dbs_comments", finNid)
+	}
+
+	// 构造新的记录数据结构
+	newPageData := schema.WeeklyData{
+		ID:    fmt.Sprintf("%d", newID), // 假设 ID 为字符串格式
+		Guild: guildName,                // Guild 列
+		AR:    totalAmount,              // AR 列
+	}
+
+	// 新增记录到 WeeklyDBs 表
+	if err := f.db.CreatePage(f.db.WeeklyDBs, &newPageData); err != nil {
+		return fmt.Errorf("failed to add new page for fin_nid: %s, error: %s", finNid, err.Error())
+	}
+
+	log.Info("Added new record to WeeklyDBs successfully", "new_id", newID, "fin_nid", finNid, "guild", guildName, "totalAmount", totalAmount)
+	return nil
+}
 
 func (f *Finance) UpdateFinToProgress(
 	finNid, paymentDateStr,
@@ -129,8 +105,6 @@ func (f *Finance) UpdateFinToProgress(
 
 	// 遍历符合条件的页面，提取并累加amount值
 	for _, page := range pages {
-		// 将 page.Properties 转换为 notion.DatabasePageProperties
-
 		wpagep, ok := page.Properties.(notion.DatabasePageProperties)
 		if !ok {
 			msg := fmt.Sprintf("Failed to assert properties as DatabasePageProperties in page id: %s", page.ID)
@@ -139,13 +113,10 @@ func (f *Finance) UpdateFinToProgress(
 			continue
 		}
 
-		// 使用 NewWrokloadDataFromProps 创建 workloadData 实例
 		workloadData := db.NewWrokloadDataFromProps(page.ID, &wpagep)
-
-		// 从 workloadData 获取 Amount 值
 		wusd := workloadData.Amount
 		totalAmount += wusd
-		// 更新页面信息
+
 		finData := schema.FinData{
 			NID:         page.ID,
 			ActualToken: actualToken,
@@ -160,6 +131,13 @@ func (f *Finance) UpdateFinToProgress(
 			log.Error(msg)
 			errs = append(errs, msg)
 		}
+	}
+
+	// 将 totalAmount 填入 WeeklyDBs 表的 AR 列
+	if err := f.UpdateWeeklyDBs(finNid, totalAmount); err != nil {
+		msg := fmt.Sprintf("Failed to update WeeklyDBs for fin_nid: %s, error: %s", finNid, err.Error())
+		log.Error(msg)
+		errs = append(errs, msg)
 	}
 
 	log.Info("Update done", "fin_nid", finNid, "totalAmount", totalAmount, "time", time.Since(t))
