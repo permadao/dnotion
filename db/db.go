@@ -14,11 +14,13 @@ type DB struct {
 	TaskDBs                  []string // notion id
 	WorkloadDBs              []string // notion id
 	FinanceDBs               []string // notion id
-	ContributorsDB           string   // notion id
-	GuildDB                  string   // notion id
-	ContentStatDB            string   // notion id
-	CincentiveWeeklyDB       string   // notion id
-	CincentiveWeeklyGuildDB  string   // notion id
+	FinanceDBsComments       map[string]string
+	WeeklyDBs                string // notion id
+	ContributorsDB           string // notion id
+	GuildDB                  string // notion id
+	ContentStatDB            string // notion id
+	CincentiveWeeklyDB       string // notion id
+	CincentiveWeeklyGuildDB  string // notion id
 	TranslationContributorDB string
 	DevContributorDB         string
 	SubmissionRankDB         string
@@ -34,6 +36,8 @@ func New(conf *config.Config) *DB {
 		TaskDBs:                  conf.NotionDB.TaskDBs,
 		WorkloadDBs:              conf.NotionDB.WorkloadDBs,
 		FinanceDBs:               conf.NotionDB.FinDBs,
+		FinanceDBsComments:       conf.NotionDB.FinDBsComments,
+		WeeklyDBs:                conf.NotionDB.WeeklyDBs,
 		ContributorsDB:           conf.NotionDB.ContributorsDB,
 		GuildDB:                  conf.NotionDB.GuildDB,
 		ContentStatDB:            conf.NotionDB.ContentStatDB,

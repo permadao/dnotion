@@ -18,6 +18,7 @@ type FinData struct {
 	Status         string
 	WorkloadID     string
 	WorkloadStatus string
+	WorkloadToken  string
 	PaymentDate    string
 	Contributor    string
 	ReceiptUrl     string
@@ -54,6 +55,9 @@ func (f *FinData) DeserializePropertys(nid string, props notion.DatabasePageProp
 	}
 	if props["Workload Status"].Select != nil {
 		f.WorkloadStatus = props["Workload Status"].Select.Name
+	}
+	if props["Workload Token"].Select != nil {
+		f.WorkloadToken = props["Workload Token"].Select.Name
 	}
 	if props["Payment Date"].Date != nil {
 		f.PaymentDate = props["Payment Date"].Date.Start.Format("2006-01-02")
@@ -112,6 +116,11 @@ func (f *FinData) SerializePropertys() (nid string, nprops *notion.DatabasePageP
 	if f.WorkloadStatus != "" {
 		props["Workload Status"] = notion.DatabasePageProperty{
 			Status: &notion.SelectOptions{Name: f.WorkloadStatus},
+		}
+	}
+	if f.WorkloadToken != "" {
+		props["Workload Token"] = notion.DatabasePageProperty{
+			Status: &notion.SelectOptions{Name: f.WorkloadToken},
 		}
 	}
 	if f.WorkloadID != "" {
